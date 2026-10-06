@@ -1,11 +1,4 @@
-Hemen düzeltiyorum kanka! Kod bloğunun dışındaki açıklama cümlesi yanlışlıkla kodun en başına karışmış.
 
-Canlı site adresin:
-👉 Poyraz AI - Canlı Web Sitesi
-
-GitHub'daki app.py dosyasının içindekileri tamamen silip, yerine sadece şu hatasız, tertemiz kodu yapıştırıp kaydetmen yeterli:
-
-Python
 import streamlit as st
 
 # Sayfa Ayarları
