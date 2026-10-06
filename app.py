@@ -1,14 +1,15 @@
 import streamlit as st
+import requests
 
 # Sayfa Ayarları
 st.set_page_config(page_title="Poyraz AI - Instagram Hesap Bulucu", page_icon="🔍", layout="centered")
 
 # Arayüz Tasarımı
 st.title("🚀 Poyraz AI")
-st.subheader("Instagram Akıllı Hesap ve Varyasyon Bulucu")
+st.subheader("Instagram Akıllı Hesap ve Boşta Kullanıcı Adı Bulucu")
 
 # --- YAN MENÜ (ÖZELLEŞTİRME VE KATEGORİLER) ---
-st.sidebar.header("⚙️️ Gelişmiş Ayarlar")
+st.sidebar.header("⚙ Gelişmiş Ayarlar")
 
 kategori = st.sidebar.selectbox(
     "🎯 Hazır Kategori Seç",
@@ -25,14 +26,16 @@ elif kategori == "💼 İşletme / Store":
 elif kategori == "🔥 Popüler / Global":
     default_ekler = "real, official, 99, 07, 35, x, z, the, style"
 
-# Kasma yapmaması için slider sınırını ideal düzeyde tutuyoruz
-secilen_uzunluk = st.sidebar.slider("Sayısal Ek Sınırı (0 ile X arası)", 10, 100, 30)
+secilen_uzunluk = st.sidebar.slider("Sayısal Ek Sınırı (0 ile X arası)", 10, 80, 25)
 ozel_ek_giris = st.sidebar.text_input("Özel Eklerin (Virgülle ayır)", default_ekler)
 
 konum_secimi = st.sidebar.radio(
     "📍 Kombinasyon Konumu",
     ["Tümü (Başa, Sona ve Ortaya)", "Sadece Kelimenin Başına", "Sadece Kelimenin Sonuna"]
 )
+
+# Sadece boşta olanları tarama seçeneği
+sadece_bostan_sec = st.sidebar.checkbox("🟢 Sadece Boşta Olanları Tara (Müsait Hesaplar)", value=False)
 
 # Kombinasyon Üreten Fonksiyon
 def kombinasyon_uret(kelime, max_sayi, ek_listesi, konum):
@@ -69,15 +72,44 @@ def kombinasyon_uret(kelime, max_sayi, ek_listesi, konum):
 
     return sorted(list(kombinasyonlar), key=len)
 
+# Instagram Hesap Müsaitlik Kontrol Fonksiyonu
+def hesap_bosta_mi(kullanici_adi):
+    url = f"https://www.instagram.com/{kullanici_adi}/"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    try:
+        response = requests.get(url, headers=headers, timeout=3)
+        # Eğer sayfa 404 dönüyorsa o kullanıcı adı Instagram'da yoktur (yani boştadır!)
+        if response.status_code == 404:
+            return True
+    except:
+        pass
+    return False
+
 # Ana Arama Alanı
 aranan = st.text_input("Aranacak kelimeyi veya ismi girin:")
 
 if aranan:
     with st.spinner('Varyasyonlar üretiliyor...'):
         adaylar = kombinasyon_uret(aranan, secilen_uzunluk, ozel_ek_giris, konum_secimi)
-        sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
         
-    st.success(f"**'{aranan}'** için toplam **{len(sonuclar)}** varyasyon hızlıca hazırlandı!")
+    # Eğer kullanıcı "Sadece Boşta Olanları Tara" seçeneğini seçtiyse filtreleyelim
+    if sadece_bostan_sec:
+        st.warning("⚠️ Canlı tarama modu aktif! Müsait hesaplar kontrol ediliyor, bu işlem birkaç saniye sürebilir...")
+        bos_olanlar = []
+        progress_bar = st.progress(0)
+        total = len(adaylar)
+        
+        for idx, k in enumerate(adaylar[:50]): # Performans için ilk 50 adayı tarayalım
+            if hesap_bosta_mi(k):
+                bos_olanlar.append(k)
+            progress_bar.progress((idx + 1) / min(total, 50))
+            
+        adaylar = bos_olanlar
+        st.success(f"🎯 Tarama tamamlandı! Boşta olan toplam **{len(adaylar)}** hesap bulundu.")
+    else:
+        st.success(f"**'{aranan}'** için toplam **{len(adaylar)}** varyasyon hazırlandı!")
+
+    sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
     
     # 1. Dosya İndirme Butonu (.txt olarak)
     txt_icerigi = "\n".join(sonuclar)
@@ -92,10 +124,7 @@ if aranan:
     st.markdown("### 📋 Toplu Kopyalama Alanı")
     st.text_area("Tüm sonuçları buradan tek hareketle kopyalayabilirsin:", txt_icerigi, height=150)
     
-    # 3. Hafifletilmiş Önizleme Listesi (Kasma yapmaz)
-    st.markdown("### 🔗 Profil Linkleri Önizlemesi (En Temizler)")
-    for url in sonuclar[:150]:
+    # 3. Önizleme Listesi
+    st.markdown("### 🔗 Profil Linkleri Önizlemesi")
+    for url in sonuclar:
         st.markdown(f"- [{url}]({url})")
-        
-    if len(sonuclar) > 150:
-        st.info("💡 Telefonunun yağ gibi akması için ilk 150 sonuç gösteriliyor. Tüm arşivi indirmek için yukarıdaki **.TXT İndir** butonunu kullanabilirsin!")
