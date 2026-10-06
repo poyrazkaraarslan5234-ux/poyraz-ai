@@ -9,8 +9,7 @@ st.subheader("Instagram Akıllı Hesap ve Varyasyon Bulucu")
 
 # --- YAN MENÜ (ÖZELLEŞTİRME AYARLARI) ---
 st.sidebar.header("⚙️ Gelişmiş Ayarlar")
-# Kasma sorununu önlemek için varsayılan sınırı biraz daha dengeli tuttuk
-secilen_uzunluk = st.sidebar.slider("Sayısal Ek Sınırı (0 ile X arası)", 10, 200, 50)
+secilen_uzunluk = st.sidebar.slider("Sayısal Ek Sınırı (0 ile X arası)", 10, 300, 50)
 ozel_ek_giris = st.sidebar.text_input("Özel Eklerin (Virgülle ayır)", "official, real, tr, 34, 52")
 
 # Kombinasyon Üreten ve Uzunluğa Göre Sıralayan Fonksiyon
@@ -60,25 +59,22 @@ if aranan:
         adaylar = kombinasyon_uret(aranan, secilen_uzunluk, ozel_ek_giris)
         sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
         
-    st.success(f"**'{aranan}'** için toplam **{len(sonuclar)}** varyasyon en kısadan uzuna doğru sıralandı!")
+    st.success(f"**'{aranan}'** için toplam **{len(sonuclar)}** varyasyon en kısadan uzuna doğru listelendi!")
     
     # 1. Dosya İndirme Butonu (.txt olarak)
     txt_icerigi = "\n".join(sonuclar)
     st.download_button(
         label="📥 Tüm Linkleri .TXT Olarak İndir",
-        data=txt_icerigi,
+        data=txt_icerigri if 'txt_icerigri' in locals() else txt_icerigi,
         file_name=f"poyraz_ai_{aranan}_kombinasyonlar.txt",
         mime="text/plain"
     )
 
-    # 2. Tek Tuşla Kopyalanabilir Metin Kutusu
+    # 2. Toplu Kopyalama Alanı
     st.markdown("### 📋 Toplu Kopyalama Alanı")
-    st.text_area("En kısa kullanıcı adları en üsttedir:", txt_icerigi, height=150)
+    st.text_area("Tüm sonuçları buradan kopyalayabilirsin:", txt_icerigi, height=150)
     
-    # Sonuçları Link Olarak Gösterme (Performans için ilk 100 tanesini ekrana basalım ki telefon kasmasın)
-    st.markdown("### 🔗 Profil Linkleri Önizlemesi (En Kısa / En Temizler)")
-    for url in sonuclar[:100]:
+    # 3. Sınırsız Liste Gösterimi
+    st.markdown("### 🔗 Tüm Profil Linkleri (Sınırsız)")
+    for url in sonuclar:
         st.markdown(f"- [{url}]({url})")
-        
-    if len(sonuclar) > 100:
-        st.info("💡 Telefonunun kasmaması için ilk 100 sonuç gösteriliyor. Tüm listeyi görmek için üstteki **.TXT İndir** butonunu kullanabilirsin!")
