@@ -5,35 +5,43 @@ st.set_page_config(page_title="Poyraz AI - Instagram Hesap Bulucu", page_icon="�
 
 # Arayüz Tasarımı
 st.title("🚀 Poyraz AI")
-st.subheader("Instagram Akıllı Hesap ve Varyasyon Bulucu (Tam Otomatik - Full Liste)")
+st.subheader("Instagram Akıllı Hesap ve Varyasyon Bulucu (Tam Kapsamlı)")
 
-# Kombinasyon Üreten Fonksiyon (Tüm olası varyasyonlar)
+# Kombinasyon Üreten Fonksiyon (Tüm olası varyasyonlar + Soyisim & İkili İsim Kalıpları)
 def kombinasyon_uret(kelime):
     temiz = kelime.lower().strip().replace(" ", "")
     if not temiz:
         return []
         
-    # Genişletilmiş Önekler (Başa gelebilecekler)
+    # 1. Genişletilmiş Önekler (Başa gelebilecekler)
     on_ekler = [
         "", "_", ".", "__", "._", "_.", "x", "z", "i", "the", "real", 
         "official", "pro", "m", "mr", "mrs", "dr", "the_", "i_", "my"
     ]
     
-    # Genişletilmiş Sonekler ve Sayılar (Sona gelebilecekler)
+    # 2. Genişletilmiş Sonekler ve Sayılar (0-999 arası)
     arka_ekler = [""]
-    
-    # 0'dan 999'a kadar tüm sayılar ve varyasyonları
     for i in range(1000):
         arka_ekler.append(str(i))
         arka_ekler.append(f"_{i}")
         arka_ekler.append(f".{i}")
         arka_ekler.append(f"__{i}")
         
-    # Özel ve Popüler Ekler Listesi
+    # 3. Soyisim ve İkili İsim Kalıpları (Popüler ve yaygın soyisim/ek yapısı)
+    soyisim_kaliplari = [
+        # Yaygın Türk soyisimleri ve ekleri
+        "yilmaz", "kaya", "demir", "celik", "ahin", "yildiz", "yildirim", "ozturk", 
+        "aydin", "ozdemir", "arslan", "dogan", "kilic", "aslan", "cetin", "kara", 
+        "koc", "kurt", "ozkan", "simsek", "polat", "ozcan", "corlu", "ordu", "samsun",
+        # Harf ve kısaltma bazlı soyisim ekleri
+        "oglu", "gil", "zade", "pas", "bey", "han", "can", "alp", "efe", "mert"
+    ]
+    
+    # 4. Profesyonel, Kurumsal ve Popüler Ekler
     ozel_ekler = [
         # Şehir / Bölge kodları
         "01", "06", "07", "10", "16", "21", "26", "34", "35", "38", "41", "42", "52", "53", "54", "55", "61", "67", "77", "99",
-        # Yıllar
+        # Yıllar (2000 - 2026)
         "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", 
         "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", 
         "2020", "2021", "2022", "2023", "2024", "2025", "2026",
@@ -45,6 +53,8 @@ def kombinasyon_uret(kelime):
         "team", "cl", "club", "fan", "fc", "original", "vip", "sec", "private"
     ]
     
+    # Hepsini arka ekler listesine dahil edelim
+    arka_ekler.extend(soyisim_kaliplari)
     arka_ekler.extend(ozel_ekler)
     
     kombinasyonlar = set()
@@ -62,17 +72,18 @@ def kombinasyon_uret(kelime):
             kombinasyonlar.add(f"{arka}_{temiz}{on}")
             kombinasyonlar.add(f"{arka}.{temiz}{on}")
 
+    # En kısa ve en mantıklı olanlardan, en uzunlara doğru sıralama
     return sorted(list(kombinasyonlar), key=len)
 
 # Ana Arama Alanı
 aranan = st.text_input("Aranacak kelimeyi veya ismi girin:")
 
 if aranan:
-    with st.spinner('Yüz binlerce olası varyasyon hesaplanıyor...'):
+    with st.spinner('Soyisimler, unvanlar ve yüz binlerce varyasyon hesaplanıyor...'):
         adaylar = kombinasyon_uret(aranan)
         sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
         
-    st.success(f"**'{aranan}'** için **{len(sonuclar)}** adet olası varyasyon başarıyla üretildi ve hepsi aşağıda listelendi!")
+    st.success(f"**'{aranan}'** için soyisimler dahil **{len(sonuclar)}** adet olası varyasyon başarıyla üretildi!")
     
     # 1. Dosya İndirme Butonu (.txt olarak)
     txt_icerigi = "\n".join(sonuclar)
@@ -90,7 +101,9 @@ if aranan:
     # 3. Sonsuz Kaydırmalı / Genişletilebilir Tam Liste Gösterimi
     st.markdown(f"### 🔗 Üretilen Tüm Profil Linkleri ({len(sonuclar)} Adet)")
     
-    # Performans ve arayüz donmaması için metin kutusu içinde veya expando içinde tam liste
     with st.expander("Tüm Listeyi Ekranda Gör (Tıkla Aç)", expanded=False):
         for url in sonuclar:
             st.markdown(f"- [{url}]({url})")
+
+---
+👉 [Poyraz AI - Canlı Web Sitesi](https://poyraz-ai-hay5wrnblp4bxchnazgb8n.streamlit.app/)
