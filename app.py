@@ -19,20 +19,26 @@ def kombinasyon_uret(kelime):
     # 1. Ek almamış ham ve saf hali
     kombinasyonlar.add(temiz)
     
-    # 2. Herhangi bir harfi eksik yazma / harf düşürme varyasyonları (örn: poyraz yerine poyaz vb.)
-    if len(temiz) > 2:
-        for i in range(len(temiz)):
-            eksik_kelime = temiz[:i] + temiz[i+1:]
-            kombinasyonlar.add(eksik_kelime)
-
-    # 3. Harf Tekrarları ve İkilemeler (örn: ppoyraz, poyrazz, ppoyrazkaraarslann)
+    # 2. Harf Ekleme / Çoğaltma Varyasyonları (örn: poyraz -> ppoyraz, poyrazz, poyrazzkaraarslann vb.)
     if len(temiz) > 0:
+        # Başa ve sona tekrarlar
         ilk_harf = temiz[0]
         son_harf = temiz[-1]
         kombinasyonlar.add(ilk_harf + temiz)          
         kombinasyonlar.add(temiz + son_harf)          
         kombinasyonlar.add(ilk_harf + ilk_harf + temiz[1:]) 
         kombinasyonlar.add(temiz[:-1] + son_harf + son_harf) 
+        
+        # Kelimenin içerisindeki herhangi bir harfi çiftleme (örn: poyraz -> poyrazz, poyrraz, vb.)
+        for i in range(len(temiz)):
+            eklenmis = temiz[:i] + temiz[i] + temiz[i:]
+            kombinasyonlar.add(eklenmis)
+
+    # 3. Herhangi bir harfi eksik yazma varyasyonları
+    if len(temiz) > 2:
+        for i in range(len(temiz)):
+            eksik_kelime = temiz[:i] + temiz[i+1:]
+            kombinasyonlar.add(eksik_kelime)
 
     # 4. Harflerin arasına tek tek alttan çizgi koyma (örn: p_o_y_r_a_z)
     if len(temiz) > 1:
@@ -80,7 +86,7 @@ if aranan:
     adaylar = kombinasyon_uret(aranan)
     sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
     
-    st.success(f"**'{aranan}'** için eksik harf varyasyonları, tekrarlar ve çizgiler dahil toplam **{len(sonuclar)}** adet hesap hazırlandı!")
+    st.success(f"**'{aranan}'** için harf eklemeleri, eksiltmeler ve çizgiler dahil toplam **{len(sonuclar)}** adet hesap hazırlandı!")
     
     # 1. Dosya İndirme Butonu (.txt olarak)
     txt_icerigi = "\n".join(sonuclar)
