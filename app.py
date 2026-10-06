@@ -9,10 +9,11 @@ st.subheader("Instagram Akıllı Hesap ve Varyasyon Bulucu")
 
 # --- YAN MENÜ (ÖZELLEŞTİRME AYARLARI) ---
 st.sidebar.header("⚙️ Gelişmiş Ayarlar")
-secilen_uzunluk = st.sidebar.slider("Sayısal Ek Sınırı (0 ile X arası)", 10, 500, 100)
+# Kasma sorununu önlemek için varsayılan sınırı biraz daha dengeli tuttuk
+secilen_uzunluk = st.sidebar.slider("Sayısal Ek Sınırı (0 ile X arası)", 10, 200, 50)
 ozel_ek_giris = st.sidebar.text_input("Özel Eklerin (Virgülle ayır)", "official, real, tr, 34, 52")
 
-# Kombinasyon Üreten Fonksiyon
+# Kombinasyon Üreten ve Uzunluğa Göre Sıralayan Fonksiyon
 def kombinasyon_uret(kelime, max_sayi, ek_listesi):
     temiz = kelime.lower().strip().replace(" ", "")
     if not temiz:
@@ -26,7 +27,6 @@ def kombinasyon_uret(kelime, max_sayi, ek_listesi):
         arka_ekler.append(f"_{i}")
         arka_ekler.append(f".{i}")
         
-    # Kullanıcının sidebar'dan girdiği özel ekleri de listeye ekleyelim
     ekstra_ekler = [e.strip() for e in ek_listesi.split(",") if e.strip()]
     ozel_ekler = [
         "11", "21", "34", "35", "52", "07", "53", "61", "06", "99", 
@@ -48,17 +48,19 @@ def kombinasyon_uret(kelime, max_sayi, ek_listesi):
             kombinasyonlar.add(f"{arka}_{temiz}{on}")
             kombinasyonlar.add(f"{arka}.{temiz}{on}")
 
-    return sorted(list(kombinasyonlar))
+    # Önce en kısa olanlar (az ek alanlar), sonra uzun olanlar sıralansın
+    sirali_liste = sorted(list(kombinasyonlar), key=len)
+    return sirali_liste
 
 # Ana Arama Alanı
 aranan = st.text_input("Aranacak kelimeyi veya ismi girin:")
 
 if aranan:
-    with st.spinner('Varyasyonlar üretiliyor...'):
+    with st.spinner('Varyasyonlar üretiliyor ve sıralanıyor...'):
         adaylar = kombinasyon_uret(aranan, secilen_uzunluk, ozel_ek_giris)
         sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
         
-    st.success(f"**'{aranan}'** için toplam **{len(sonuclar)}** varyasyon oluşturuldu!")
+    st.success(f"**'{aranan}'** için toplam **{len(sonuclar)}** varyasyon en kısadan uzuna doğru sıralandı!")
     
     # 1. Dosya İndirme Butonu (.txt olarak)
     txt_icerigi = "\n".join(sonuclar)
@@ -71,9 +73,12 @@ if aranan:
 
     # 2. Tek Tuşla Kopyalanabilir Metin Kutusu
     st.markdown("### 📋 Toplu Kopyalama Alanı")
-    st.text_area("Aşağıdaki kutudan tüm sonuçları tek hareketle kopyalayabilirsin:", txt_icerigi, height=150)
+    st.text_area("En kısa kullanıcı adları en üsttedir:", txt_icerigi, height=150)
     
-    # Sonuçları Link Olarak Gösterme
-    st.markdown("### 🔗 Profil Linkleri Önizlemesi")
-    for url in sonuclar:
+    # Sonuçları Link Olarak Gösterme (Performans için ilk 100 tanesini ekrana basalım ki telefon kasmasın)
+    st.markdown("### 🔗 Profil Linkleri Önizlemesi (En Kısa / En Temizler)")
+    for url in sonuclar[:100]:
         st.markdown(f"- [{url}]({url})")
+        
+    if len(sonuclar) > 100:
+        st.info("💡 Telefonunun kasmaması için ilk 100 sonuç gösteriliyor. Tüm listeyi görmek için üstteki **.TXT İndir** butonunu kullanabilirsin!")
