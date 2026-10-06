@@ -19,6 +19,16 @@ def kombinasyon_uret(kelime):
     # 1. Ek almamış ham ve saf hali
     kombinasyonlar.add(temiz)
     
+    # 2. Harflerin arasına tek tek alttan çizgi koyma (örn: p_o_y_r_a_z)
+    if len(temiz) > 1:
+        for i in range(1, len(temiz)):
+            harf_aralari_alt = temiz[:i] + "_" + temiz[i:]
+            kombinasyonlar.add(harf_aralari_alt)
+        
+        # Tamamen her harfin arasına alttan çizgi koyma (örn: p_o_y_r_a_z)
+        tam_cizgili = "_".join(list(temiz))
+        kombinasyonlar.add(tam_cizgili)
+
     on_ekler = ["", "_", ".", "x", "z", "real", "official"]
     
     arka_ekler = [""]
@@ -58,7 +68,7 @@ if aranan:
     adaylar = kombinasyon_uret(aranan)
     sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
     
-    st.success(f"**'{aranan}'** için alt çizgili ve saf haller dahil toplam **{len(sonuclar)}** adet varyasyon hazırlandı!")
+    st.success(f"**'{aranan}'** için harf arası çizgiler dahil toplam **{len(sonuclar)}** adet varyasyon hazırlandı!")
     
     # 1. Dosya İndirme Butonu (.txt olarak)
     txt_icerigi = "\n".join(sonuclar)
