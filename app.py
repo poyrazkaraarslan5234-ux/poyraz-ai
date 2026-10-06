@@ -108,6 +108,3 @@ if aranan:
     st.markdown("### 🔗 Profil Linkleri Önizlemesi")
     for url in sonuclar:
         st.markdown(f"- [{url}]({url})")
-
----
-👉 [Poyraz AI - Canlı Web Sitesi](https://poyraz-ai-hay5wrnblp4bxchnazgb8n.streamlit.app/)
