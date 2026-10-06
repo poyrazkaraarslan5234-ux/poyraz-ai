@@ -104,6 +104,3 @@ if aranan:
     with st.expander("Tüm Listeyi Ekranda Gör (Tıkla Aç)", expanded=False):
         for url in sonuclar:
             st.markdown(f"- [{url}]({url})")
-
----
-👉 [Poyraz AI - Canlı Web Sitesi](https://poyraz-ai-hay5wrnblp4bxchnazgb8n.streamlit.app/)
