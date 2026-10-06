@@ -16,7 +16,7 @@ def kombinasyon_uret(kelime):
         
     kombinasyonlar = set()
     
-    # 1. EN ÖNEMLİSİ: Ek almamış ham ve saf hali
+    # 1. Ek almamış ham ve saf hali
     kombinasyonlar.add(temiz)
     
     on_ekler = ["", "_", ".", "x", "z", "real", "official"]
@@ -38,9 +38,16 @@ def kombinasyon_uret(kelime):
         for arka in arka_ekler:
             if not on and not arka:
                 continue
+            # Standart yapışık kombinasyonlar
             kombinasyonlar.add(f"{on}{temiz}{arka}")
-            kombinasyonlar.add(f"{on}{temiz}_{arka}")
             kombinasyonlar.add(f"{arka}{temiz}{on}")
+            
+            # Alttan çizgi ve noktalı ara geçişler (örn: kelime_34, kelime.34)
+            if arka:
+                kombinasyonlar.add(f"{temiz}_{arka}")
+                kombinasyonlar.add(f"{temiz}.{arka}")
+                kombinasyonlar.add(f"{on}_{temiz}_{arka}")
+                kombinasyonlar.add(f"{on}.{temiz}.{arka}")
 
     return sorted(list(kombinasyonlar), key=len)
 
@@ -51,7 +58,7 @@ if aranan:
     adaylar = kombinasyon_uret(aranan)
     sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
     
-    st.success(f"**'{aranan}'** için ek almamış saf hali dahil toplam **{len(sonuclar)}** adet varyasyon hazırlandı!")
+    st.success(f"**'{aranan}'** için alt çizgili ve saf haller dahil toplam **{len(sonuclar)}** adet varyasyon hazırlandı!")
     
     # 1. Dosya İndirme Butonu (.txt olarak)
     txt_icerigi = "\n".join(sonuclar)
