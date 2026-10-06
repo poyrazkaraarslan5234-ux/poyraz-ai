@@ -19,13 +19,21 @@ def kombinasyon_uret(kelime):
     # 1. Ek almamış ham ve saf hali
     kombinasyonlar.add(temiz)
     
-    # 2. Harflerin arasına tek tek alttan çizgi koyma (örn: p_o_y_r_a_z)
+    # 2. Harf Tekrarları ve İkilemeler (örn: ppoyraz, poyrazz, ppoyrazkaraarslann)
+    if len(temiz) > 0:
+        ilk_harf = temiz[0]
+        son_harf = temiz[-1]
+        kombinasyonlar.add(ilk_harf + temiz)          # Başa bir harf daha ekleme (örn: ppoyraz)
+        kombinasyonlar.add(temiz + son_harf)          # Sona bir harf daha ekleme (örn: poyrazz)
+        kombinasyonlar.add(ilk_harf + ilk_harf + temiz[1:]) # İlk harfi çiftleme
+        kombinasyonlar.add(temiz[:-1] + son_harf + son_harf) # Son harfi çiftleme
+
+    # 3. Harflerin arasına tek tek alttan çizgi koyma (örn: p_o_y_r_a_z)
     if len(temiz) > 1:
         for i in range(1, len(temiz)):
             harf_aralari_alt = temiz[:i] + "_" + temiz[i:]
             kombinasyonlar.add(harf_aralari_alt)
         
-        # Tamamen her harfin arasına alttan çizgi koyma (örn: p_o_y_r_a_z)
         tam_cizgili = "_".join(list(temiz))
         kombinasyonlar.add(tam_cizgili)
 
@@ -48,11 +56,9 @@ def kombinasyon_uret(kelime):
         for arka in arka_ekler:
             if not on and not arka:
                 continue
-            # Standart yapışık kombinasyonlar
             kombinasyonlar.add(f"{on}{temiz}{arka}")
             kombinasyonlar.add(f"{arka}{temiz}{on}")
             
-            # Alttan çizgi ve noktalı ara geçişler (örn: kelime_34, kelime.34)
             if arka:
                 kombinasyonlar.add(f"{temiz}_{arka}")
                 kombinasyonlar.add(f"{temiz}.{arka}")
@@ -68,7 +74,7 @@ if aranan:
     adaylar = kombinasyon_uret(aranan)
     sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
     
-    st.success(f"**'{aranan}'** için harf arası çizgiler dahil toplam **{len(sonuclar)}** adet varyasyon hazırlandı!")
+    st.success(f"**'{aranan}'** için harf tekrarları ve çizgiler dahil toplam **{len(sonuclar)}** adet varyasyon hazırlandı!")
     
     # 1. Dosya İndirme Butonu (.txt olarak)
     txt_icerigi = "\n".join(sonuclar)
