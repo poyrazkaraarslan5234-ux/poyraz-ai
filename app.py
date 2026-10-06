@@ -5,7 +5,7 @@ st.set_page_config(page_title="Poyraz AI - Instagram Hesap Bulucu", page_icon="�
 
 # Arayüz Tasarımı
 st.title("🚀 Poyraz AI")
-st.subheader("Instagram Akıllı Hesap ve Varyasyon Bulucu (Tam Otomatik)")
+st.subheader("Instagram Akıllı Hesap ve Varyasyon Bulucu (Tam Otomatik - Full Liste)")
 
 # Kombinasyon Üreten Fonksiyon (Tüm olası varyasyonlar)
 def kombinasyon_uret(kelime):
@@ -51,7 +51,6 @@ def kombinasyon_uret(kelime):
     
     for on in on_ekler:
         for arka in arka_ekler:
-            # Sadece tek başına boş olmasınlar diye kontrol
             if not on and not arka:
                 continue
                 
@@ -63,18 +62,17 @@ def kombinasyon_uret(kelime):
             kombinasyonlar.add(f"{arka}_{temiz}{on}")
             kombinasyonlar.add(f"{arka}.{temiz}{on}")
 
-    # En kısa ve en mantıklı olanlardan, en uzunlara doğru sıralama
     return sorted(list(kombinasyonlar), key=len)
 
 # Ana Arama Alanı
 aranan = st.text_input("Aranacak kelimeyi veya ismi girin:")
 
 if aranan:
-    with st.spinner('Yüz binlerce olası varyasyon hesaplanıyor ve sıralanıyor...'):
+    with st.spinner('Yüz binlerce olası varyasyon hesaplanıyor...'):
         adaylar = kombinasyon_uret(aranan)
         sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
         
-    st.success(f"**'{aranan}'** için **{len(sonuclar)}** adet olası varyasyon başarıyla üretildi!")
+    st.success(f"**'{aranan}'** için **{len(sonuclar)}** adet olası varyasyon başarıyla üretildi ve hepsi aşağıda listelendi!")
     
     # 1. Dosya İndirme Butonu (.txt olarak)
     txt_icerigi = "\n".join(sonuclar)
@@ -85,14 +83,14 @@ if aranan:
         mime="text/plain"
     )
 
-    # 2. Toplu Kopyalama Alanı
-    st.markdown("### 📋 Toplu Kopyalama Alanı")
-    st.text_area("Tüm sonuçları buradan tek hareketle kopyalayabilirsin:", txt_icerigi, height=150)
+    # 2. Tam Boy Toplu Kopyalama Alanı
+    st.markdown("### 📋 Toplu Kopyalama Alanı (Tümü)")
+    st.text_area("Buradaki kutunun içini tamamen kopyalayabilirsin:", txt_icerigi, height=250)
     
-    # 3. Önizleme Listesi
-    st.markdown("### 🔗 Profil Linkleri Önizlemesi (İlk 100 Tane)")
-    for url in sonuclar[:100]:
-        st.markdown(f"- [{url}]({url})")
-        
-    if len(sonuclar) > 100:
-        st.info(f"Performans için ilk 100 tanesi gösteriliyor. Kalan {len(sonuclar) - 100} varyasyonu .TXT olarak indirebilir veya toplu kopyalama alanından alabilirsin.")
+    # 3. Sonsuz Kaydırmalı / Genişletilebilir Tam Liste Gösterimi
+    st.markdown(f"### 🔗 Üretilen Tüm Profil Linkleri ({len(sonuclar)} Adet)")
+    
+    # Performans ve arayüz donmaması için metin kutusu içinde veya expando içinde tam liste
+    with st.expander("Tüm Listeyi Ekranda Gör (Tıkla Aç)", expanded=False):
+        for url in sonuclar:
+            st.markdown(f"- [{url}]({url})")
