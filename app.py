@@ -1,8 +1,9 @@
-Kanka bahsettiğim bu harika özelliklerin arasından en kullanışlı ve siteyi en profesyonel gösterecek olanları — Hazır Kategori Butonları (Gamer, Müzisyen, Store vb.), Sadece Başa/Sona Ekleme Filtresi ve Favorilere Ekleme (Seçilenleri Kaydetme) sistemini doğrudan kodun içine entegre ettim!
+Hemen düzeltiyorum kanka! Kod bloğunun dışındaki açıklama cümlesi yanlışlıkla kodun en başına karışmış.
 
-Artık sol menüden kategorileri seçebilir, eklerin nereye geleceğini ayarlayabilir ve beğendiğin kullanıcı adlarını favorilere ekleyip sadece onları indirebilirsin.
+Canlı site adresin:
+👉 Poyraz AI - Canlı Web Sitesi
 
-İşte en güncel ve dolu dolu olan app.py kodun:
+GitHub'daki app.py dosyasının içindekileri tamamen silip, yerine sadece şu hatasız, tertemiz kodu yapıştırıp kaydetmen yeterli:
 
 Python
 import streamlit as st
@@ -124,7 +125,6 @@ if aranan:
         st.session_state.favoriler = []
 
     # Her link için bir checkbox (favori ekleme) koyalım
-    secilenler = []
     for url in sonuclar:
         col1, col2 = st.columns([0.1, 0.9])
         with col1:
