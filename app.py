@@ -128,7 +128,6 @@ def sinirsiz_kombinasyon_uret(kelime):
 
     on_ekler = ["", "_", ".", "x", "z", "real", "official", "the", "i", "m"]
     
-    # 0'dan 999'a kadar ve plaka/yıl ekleri
     arka_ekler = [""]
     for i in range(200):
         arka_ekler.append(str(i))
@@ -156,7 +155,6 @@ def sinirsiz_kombinasyon_uret(kelime):
                 kombinasyonlar.add(f"{on}_{temiz}_{arka}")
                 kombinasyonlar.add(f"{on}.{temiz}.{arka}")
 
-    # Instagram 30 karakter sınırı
     gecerli = [k for k in kombinasyonlar if len(k) <= 30]
     return sorted(list(set(gecerli)), key=len)
 
@@ -170,7 +168,6 @@ def sinirsiz_mixer(kelime1, kelime2):
         
     kombinasyonlar = set()
     
-    # Çeşitli birleşim stilleri
     birlestirmeler = [
         f"{k1}{k2}", f"{k1}_{k2}", f"{k1}.{k2}",
         f"{k2}{k1}", f"{k2}_{k1}", f"{k2}.{k1}",
@@ -228,7 +225,7 @@ if mod == "1. Tek Kelime Sınırsız Kombinasyon":
         adaylar = sinirsiz_kombinasyon_uret(aranan)
         sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
         
-        st.success(f"'{aranan'}' için üretilen TÜM **{len(sonuclar)}** adet hesap hazırlandı!")
+        st.success(f"'{aranan}' için üretilen TÜM **{len(sonuclar)}** adet hesap hazırlandı!")
         
         txt_icerigi = "\n".join(sonuclar)
         st.download_button("📥 Tüm Listeyi .TXT Olarak İndir", txt_icerigi, file_name=f"poyraz_ai_{aranan}_tum_hesaplar.txt", mime="text/plain")
