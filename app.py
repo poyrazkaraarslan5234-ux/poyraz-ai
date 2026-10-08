@@ -3,6 +3,61 @@ import streamlit as st
 # Sayfa Ayarları
 st.set_page_config(page_title="Poyraz AI - Instagram Hesap Bulucu", page_icon="🔍", layout="centered")
 
+# Özel Instagram Tarzı Profil Kartı Tasarımı (CSS)
+st.markdown("""
+    <style>
+    .profile-card {
+        display: flex;
+        align-items: center;
+        background-color: #1e1e1e;
+        padding: 10px 15px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        border: 1px solid #333;
+    }
+    .profile-ring {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2px;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    .profile-inner {
+        width: 100%;
+        height: 100%;
+        background-color: #121212;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+    .profile-info {
+        display: flex;
+        flex-direction: column;
+    }
+    .profile-name {
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 16px;
+        text-decoration: none;
+    }
+    .profile-name:hover {
+        text-decoration: underline;
+        color: #0095f6;
+    }
+    .profile-status {
+        color: #8e8e8e;
+        font-size: 12px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Arayüz Tasarımı
 st.title("🚀 Poyraz AI")
 st.subheader("Instagram Akıllı Hesap ve Varyasyon Bulucu")
@@ -117,8 +172,19 @@ if aranan:
     st.markdown("### 📋 Toplu Kopyalama Alanı")
     st.text_area("Tüm sonuçları buradan kopyalayabilirsin:", txt_icerigi, height=200)
     
-    # Önizleme Listesi (Profil İkonlu Kart Görünümü)
-    st.markdown(f"### 🔗 Profil Linkleri ve Avatar Kartları ({len(sonuclar)} Adet)")
+    # Önizleme Listesi (Özel Instagram Hikaye Halkalı Profil Kartları)
+    st.markdown(f"### 🔗 Instagram Profil Kartları ({len(sonuclar)} Adet)")
     with st.expander("Tüm Listeyi Ekranda Gör (Tıkla Aç)", expanded=False):
         for k, url in zip(filtrelenmis, sonuclar):
-            st.markdown(f"👤 **{k}** $\rightarrow$ [Profili Ziyaret Et]({url})")
+            ilk_harf = k[0].upper() if k else "P"
+            st.markdown(f"""
+                <div class="profile-card">
+                    <div class="profile-ring">
+                        <div class="profile-inner">👤</div>
+                    </div>
+                    <div class="profile-info">
+                        <a class="profile-name" href="{url}" target="_blank">@{k}</a>
+                        <span class="profile-status">Profili kontrol etmek için tıkla</span>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
