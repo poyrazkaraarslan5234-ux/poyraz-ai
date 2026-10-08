@@ -69,18 +69,44 @@ st.markdown("""
 st.title("Poyraz AI")
 st.subheader("Instagram Akıllı Hesap ve Varyasyon Bulucu")
 
-# Mod Seçimi (Tek Kelime vs Kelime Birlestirici)
-mod = st.radio("Arama Modunu Seç:", ["Tek Kelime Akilli Arama", "Iki Kelime Birlestirici (Name Mixer)"], horizontal=True)
+# Gelişmiş Mod Seçimi
+mod = st.selectbox(
+    "Arama Modunu Seç:",
+    [
+        "1. Tek Kelime Akilli Arama", 
+        "2. Iki Kelime Birlestirici (Name Mixer)", 
+        "3. Dogum Yili / Yas Kombinasyonlari", 
+        "4. Ultra Kisa / Nadir Isimler"
+    ]
+)
 
-# Müsaitlik Tahmin Fonksiyonu (Heuristic)
+# Gelişmiş Filtreler (Kenar Çubuğu veya Expander)
+with st.expander("Gelismis Filtreler ve Kisitlamalar (Tikla Ac)", expanded=False):
+    min_uzunluk = st.slider("En Az Karakter Sayisi", 3, 10, 3)
+    max_uzunluk = st.slider("En Cok Karakter Sayisi", 10, 30, 30)
+    nokta_yasakla = st.checkbox("Nokta (.) Kullanma", value=False)
+    cizgi_yasakla = st.checkbox("Alttan Cizgi (_) Kullanma", value=False)
+
+def filtreleri_uygula(liste):
+    filtrelenmis = []
+    for k in liste:
+        if len(k) < min_uzunluk or len(k) > max_uzunluk:
+            continue
+        if nokta_yasakla and "." in k:
+            continue
+        if cizgi_yasakla and "_" in k:
+            continue
+        filtrelenmis.append(k)
+    return filtrelenmis
+
+# Müsaitlik Tahmin Fonksiyonu
 def musaitlik_tahmini(kullanici_adi):
-    # Çok uzun, rastgele sayı içeren veya karmaşık isimlerin boşta olma ihtimali yüksektir
     if len(kullanici_adi) > 12 or "_" in kullanici_adi or "." in kullanici_adi or any(c.isdigit() for c in kullanici_adi):
         return "Bosta Olabilir", "badge-free"
     else:
         return "Alinmis Olabilir", "badge-taken"
 
-# Kombinasyon Üreten Fonksiyon (Tek Kelime)
+# 1. Tek Kelime Arama Fonksiyonu
 @st.cache_data
 def kombinasyon_uret(kelime):
     temiz = kelime.lower().strip().replace(" ", "")
@@ -90,12 +116,10 @@ def kombinasyon_uret(kelime):
     kombinasyonlar = set()
     kombinasyonlar.add(temiz)
     
-    # Leet Speak
     leet = temiz.replace('a', '4').replace('e', '3').replace('i', '1').replace('o', '0').replace('s', '5')
     if leet != temiz:
         kombinasyonlar.add(leet)
 
-    # Harf Ekleme / Çoğaltma
     if len(temiz) > 0:
         ilk = temiz[0]
         son = temiz[-1]
@@ -107,12 +131,10 @@ def kombinasyon_uret(kelime):
         for i in range(len(temiz)):
             kombinasyonlar.add(temiz[:i] + temiz[i] + temiz[i:])
 
-    # Harf Eksiltme
     if len(temiz) > 2:
         for i in range(len(temiz)):
             kombinasyonlar.add(temiz[:i] + temiz[i+1:])
 
-    # Alttan çizgi ve nokta
     if len(temiz) > 1:
         for i in range(1, len(temiz)):
             kombinasyonlar.add(temiz[:i] + "_" + temiz[i:])
@@ -144,10 +166,9 @@ def kombinasyon_uret(kelime):
                 kombinasyonlar.add(f"{temiz}.{arka}")
                 kombinasyonlar.add(f"{on}_{temiz}_{arka}")
 
-    gecerli = [k for k in kombinasyonlar if len(k) <= 30]
-    return sorted(list(set(gecerli)), key=len)
+    return sorted(list(set(kombinasyonlar)), key=len)
 
-# Kombinasyon Üreten Fonksiyon (İki Kelime Birlestirici)
+# 2. İki Kelime Birleştirici
 @st.cache_data
 def mixer_uret(kelime1, kelime2):
     k1 = kelime1.lower().strip().replace(" ", "")
@@ -156,74 +177,87 @@ def mixer_uret(kelime1, kelime2):
         return []
         
     kombinasyonlar = set()
-    
-    # Hibrit Birleşimler
     kombinasyonlar.add(f"{k1}{k2}")
     kombinasyonlar.add(f"{k1}_{k2}")
     kombinasyonlar.add(f"{k1}.{k2}")
     kombinasyonlar.add(f"{k2}{k1}")
     kombinasyonlar.add(f"{k2}_{k1}")
     
-    # Kısa kesitli birleşimler
     if len(k1) > 3 and len(k2) > 3:
         kombinasyonlar.add(f"{k1[:3]}{k2}")
         kombinasyonlar.add(f"{k1}{k2[:3]}")
         kombinasyonlar.add(f"{k1[:3]}_{k2}")
         kombinasyonlar.add(f"{k1}_{k2[:3]}")
 
-    # Sayılı ekler
     for ek in ["34", "35", "06", "52", "99", "2026", "official", "real"]:
         kombinasyonlar.add(f"{k1}{k2}{ek}")
         kombinasyonlar.add(f"{k1}_{k2}_{ek}")
         kombinasyonlar.add(f"{k1}.{k2}.{ek}")
 
-    gecerli = [k for k in kombinasyonlar if len(k) <= 30]
-    return sorted(list(set(gecerli)), key=len)
+    return sorted(list(set(kombinasyonlar)), key=len)
 
-# Arayüz Mantığı
-if mod == "Tek Kelime Akilli Arama":
+# 3. Doğum Yılı / Yaş Kombinasyonları
+@st.cache_data
+def yil_uret(kelime, yil_deger):
+    temiz = kelime.lower().strip().replace(" ", "")
+    y = str(yil_deger).strip()
+    if not temiz or not y:
+        return []
+        
+    kombinasyonlar = set()
+    kombinasyonlar.add(f"{temiz}{y}")
+    kombinasyonlar.add(f"{temiz}_{y}")
+    kombinasyonlar.add(f"{temiz}.{y}")
+    kombinasyonlar.add(f"{y}{temiz}")
+    kombinasyonlar.add(f"{y}_{temiz}")
+    
+    # Kısa yıl formatı (örn: 2005 -> 05)
+    if len(y) == 4:
+        kisa_yil = y[2:]
+        kombinasyonlar.add(f"{temiz}{kisa_yil}")
+        kombinasyonlar.add(f"{temiz}_{kisa_yil}")
+        kombinasyonlar.add(f"{temiz}.{kisa_yil}")
+
+    return sorted(list(set(kombinasyonlar)), key=len)
+
+# 4. Ultra Kısa / Nadir İsimler
+@st.cache_data
+def kisa_uret(kelime):
+    temiz = kelime.lower().strip().replace(" ", "")
+    if len(temiz) < 3:
+        return [temiz]
+        
+    kombinasyonlar = set()
+    # Sadece ilk 3-4 harf ile harmanlamalar
+    kombinasyonlar.add(temiz[:3])
+    kombinasyonlar.add(temiz[:4])
+    kombinasyonlar.add(f"_{temiz[:3]}")
+    kombinasyonlar.add(f".{temiz[:3]}")
+    kombinasyonlar.add(f"{temiz[:3]}x")
+    kombinasyonlar.add(f"x{temiz[:3]}")
+    kombinasyonlar.add(f"{temiz[:3]}z")
+    
+    return sorted(list(set(kombinasyonlar)), key=len)
+
+# Arayüz İşleyişi
+if mod == "1. Tek Kelime Akilli Arama":
     aranan = st.text_input("Aranacak kelimeyi veya ismi girin:")
     if aranan:
-        adaylar = kombinasyon_uret(aranan)
+        adaylar = filtreleri_uygula(kombinasyon_uret(aranan))
+        sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
         
-        st.markdown("### Filtreleme")
-        filtre = st.radio("Gorunum Sec:", ["Tumu", "Sadece Cizgili/Noktali", "Sadece Sayili"], horizontal=True)
-        
-        filtrelenmis = []
-        for k in adaylar:
-            if filtre == "Sadece Cizgili/Noktali" and ("_" in k or "." in k):
-                filtrelenmis.append(k)
-            elif filtre == "Sadece Sayili" and any(c.isdigit() for c in k):
-                filtrelenmis.append(k)
-            elif filtre == "Tumu":
-                filtrelenmis.append(k)
-                
-        if not filtrelenmis:
-            filtrelenmis = adaylar
-            
-        sonuclar = [f"https://www.instagram.com/{k}/" for k in filtrelenmis]
-        st.success(f"'{aranan}' icin toplam {len(sonuclar)} adet hesap hazirlandi!")
+        st.success(f"'{aranan}' icin filtrelenmis toplam {len(sonuclar)} adet hesap hazirlandi!")
         
         txt_icerigi = "\n".join(sonuclar)
-        st.download_button(
-            label="Tum Linkleri .TXT Olarak Indir",
-            data=txt_icerigi,
-            file_name=f"poyraz_ai_{aranan}_varyasyonlar.txt",
-            mime="text/plain"
-        )
-
-        st.markdown("### Toplu Kopyalama Alani")
-        st.text_area("Tum sonuclari buradan kopyalayabilirsin:", txt_icerigi, height=200)
+        st.download_button("Tum Linkleri .TXT Olarak Indir", txt_icerigi, file_name=f"poyraz_ai_{aranan}.txt", mime="text/plain")
+        st.text_area("Toplu Kopyalama Alani:", txt_icerigi, height=200)
         
-        st.markdown(f"### Instagram Profil Kartlari ({len(sonuclar)} Adet)")
-        with st.expander("Tum Listeyi Ekranda Gor (Tıkla Aç)", expanded=False):
-            for k, url in zip(filtrelenmis, sonuclar):
+        with st.expander("Sonuclari Goster", expanded=False):
+            for k, url in zip(adaylar, sonuclar):
                 durum, sinif = musaitlik_tahmini(k)
                 st.markdown(f"""
                     <div class="profile-card">
-                        <div class="profile-ring">
-                            <div class="profile-inner">👤</div>
-                        </div>
+                        <div class="profile-ring"><div class="profile-inner">👤</div></div>
                         <div class="profile-info">
                             <a class="profile-name" href="{url}" target="_blank">@{k}</a>
                             <span class="{sinif}">Tahmini Durum: {durum}</span>
@@ -231,39 +265,77 @@ if mod == "Tek Kelime Akilli Arama":
                     </div>
                 """, unsafe_allow_html=True)
 
-else: # İki Kelime Birleştirici (Name Mixer)
-    col1, col2 = st.columns(2)
-    with col1:
-        kelime1 = st.text_input("Birinci Kelime (Örn: adın):")
-    with col2:
-        kelime2 = st.text_input("İkinci Kelime (Örn: soyadın):")
-        
-    if kelime1 and kelime2:
-        adaylar = mixer_uret(kelime1, kelime2)
+elif mod == "2. Iki Kelime Birlestirici (Name Mixer)":
+    c1, c2 = st.columns(2)
+    with c1: k1 = st.text_input("Birinci Kelime (Ad):")
+    with c2: k2 = st.text_input("Ikinci Kelime (Soyad):")
+    
+    if k1 and k2:
+        adaylar = filtreleri_uygula(mixer_uret(k1, k2))
         sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
         
-        st.success(f"'{kelime1}' ve '{kelime2}' harmanlanarak toplam {len(sonuclar)} adet hibrit hesap üretildi!")
-        
+        st.success(f"Harmanlanmis toplam {len(sonuclar)} adet hesap hazirlandi!")
         txt_icerigi = "\n".join(sonuclar)
-        st.download_button(
-            label="Harmanlanmış Linkleri .TXT Olarak İndir",
-            data=txt_icerigi,
-            file_name=f"poyraz_ai_mixer_{kelime1}_{kelime2}.txt",
-            mime="text/plain"
-        )
-
-        st.markdown("### Toplu Kopyalama Alanı")
-        st.text_area("Tüm sonuçları buradan kopyalayabilirsin:", txt_icerigi, height=200)
+        st.download_button("Linkleri .TXT Olarak Indir", txt_icerigi, file_name=f"poyraz_ai_mixer.txt", mime="text/plain")
+        st.text_area("Toplu Kopyalama Alani:", txt_icerigi, height=200)
         
-        st.markdown(f"### Harmanlanmış Profil Kartları ({len(sonuclar)} Adet)")
-        with st.expander("Tüm Listeyi Ekranda Gör (Tıkla Aç)", expanded=True):
+        with st.expander("Sonuclari Goster", expanded=True):
             for k, url in zip(adaylar, sonuclar):
                 durum, sinif = musaitlik_tahmini(k)
                 st.markdown(f"""
                     <div class="profile-card">
-                        <div class="profile-ring">
-                            <div class="profile-inner">👤</div>
+                        <div class="profile-ring"><div class="profile-inner">👤</div></div>
+                        <div class="profile-info">
+                            <a class="profile-name" href="{url}" target="_blank">@{k}</a>
+                            <span class="{sinif}">Tahmini Durum: {durum}</span>
                         </div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+elif mod == "3. Dogum Yili / Yas Kombinasyonlari":
+    c1, c2 = st.columns(2)
+    with c1: isim = st.text_input("Isim veya Kelime:")
+    with c2: dogum_yili = st.text_input("Dogum Yili (Orn: 2005):", value="2005")
+    
+    if isim and dogum_yili:
+        adaylar = filtreleri_uygula(yil_uret(isim, dogum_yili))
+        sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
+        
+        st.success(f"Dogum yilli toplam {len(sonuclar)} adet hesap hazirlandi!")
+        txt_icerigi = "\n".join(sonuclar)
+        st.download_button("Linkleri .TXT Olarak Indir", txt_icerigi, file_name=f"poyraz_ai_yil.txt", mime="text/plain")
+        st.text_area("Toplu Kopyalama Alani:", txt_icerigi, height=200)
+        
+        with st.expander("Sonuclari Goster", expanded=True):
+            for k, url in zip(adaylar, sonuclar):
+                durum, sinif = musaitlik_tahmini(k)
+                st.markdown(f"""
+                    <div class="profile-card">
+                        <div class="profile-ring"><div class="profile-inner">👤</div></div>
+                        <div class="profile-info">
+                            <a class="profile-name" href="{url}" target="_blank">@{k}</a>
+                            <span class="{sinif}">Tahmini Durum: {durum}</span>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+else: # Ultra Kısa / Nadir İsimler
+    kisa_isim = st.text_input("Kisa / Nadir Isim Uretmek Icin Kelime Girin:")
+    if kisa_isim:
+        adaylar = filtreleri_uygula(kisa_uret(kisa_isim))
+        sonuclar = [f"https://www.instagram.com/{k}/" for k in adaylar]
+        
+        st.success(f"Ultra kisa nadir toplam {len(sonuclar)} adet hesap hazirlandi!")
+        txt_icerigi = "\n".join(sonuclar)
+        st.download_button("Linkleri .TXT Olarak Indir", txt_icerigi, file_name=f"poyraz_ai_kisa.txt", mime="text/plain")
+        st.text_area("Toplu Kopyalama Alani:", txt_icerigi, height=200)
+        
+        with st.expander("Sonuclari Goster", expanded=True):
+            for k, url in zip(adaylar, sonuclar):
+                durum, sinif = musaitlik_tahmini(k)
+                st.markdown(f"""
+                    <div class="profile-card">
+                        <div class="profile-ring"><div class="profile-inner">👤</div></div>
                         <div class="profile-info">
                             <a class="profile-name" href="{url}" target="_blank">@{k}</a>
                             <span class="{sinif}">Tahmini Durum: {durum}</span>
