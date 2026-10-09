@@ -115,7 +115,7 @@ elif secim == "⌨️ BadUSB / DuckyScript Stüdyosu":
     elif payload_turu == "IP Bilgilerini Dosyaya Kaydet":
         kod = "DELAY 1000\nGUI r\nDELAY 200\nSTRING cmd\nENTER\nDELAY 300\nSTRING ipconfig > C:\\ip_report.txt && notepad C:\\ip_report.txt\nENTER\n"
     else:
-        kod = "DELAY 1000\nGUI r\nDELAY 200\nSTRING powershell Start-Process 'https://github.\nENTER\n"
+        kod = "DELAY 1000\nGUI r\nDELAY 200\nSTRING powershell Start-Process 'https://github.com'\nENTER\n"
         
     st.text_area("Üretilen DuckyScript Kodu:", kod, height=150)
     st.download_button("Payload Dosyasını İndir (.txt)", kod, file_name="payload.txt")
@@ -140,15 +140,16 @@ elif secim == "📻 Kızılötesi (IR) Kumanda Üretici":
     marka = st.text_input("Marka Adı (Örn: Samsung, Sony, LG)", "Samsung")
     
     if st.button("IR Kodunu Üret"):
-        ir_ornek = f"#
-\n# Flipper Zero IR File
-\n# Brand: {marka} - Device: {cihaz}
-\n#
-\nname: {marka}_Power_Toggle
-\ntype: parsed
-\nprotocol: NEC
-\naddress: 04 00 00 00
-\ncommand: 07 00 00 00"
+        # Üç tırnak (f""") kullanılarak çok satırlı f-string hatası giderildi
+        ir_ornek = f"""#
+# Flipper Zero IR File
+# Brand: {marka} - Device: {cihaz}
+#
+name: {marka}_Power_Toggle
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 07 00 00 00"""
         st.code(ir_ornek, language="text")
         st.success("IR komut dosyası oluşturuldu! Flipper IR klasörüne atarak kullanabilirsiniz.")
 
