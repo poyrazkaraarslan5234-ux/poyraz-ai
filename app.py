@@ -34,78 +34,36 @@ st.markdown("""
         color: #000;
     }
     </style>
-""", unsafe_allow_html=True)
+""", unsafe_allow_html=True,)
 
 st.markdown("<h1>🛡️ PC-FLIPPER WEB PANELİ</h1>", unsafe_allow_html=True)
-st.write("<p style='text-align: center; color: #888;'>Siber Keşif Merkezi</p>", unsafe_allow_html=True)
+st.write("<p style='text-align: center; color: #888;'>Bulut Tabanlı Siber Keşif Merkezi</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 secim = st.sidebar.selectbox(
     "Menü Seçin",
-    ["Sistem Bilgisi", "Ağ Cihazlarını Tara", "Port Tara", "Kayıtlı Wi-Fi'ler"]
+    ["Sistem Bilgisi", "Port Tara", "Kayıtlı Wi-Fi'ler"]
 )
 
 # 1. Sistem Bilgisi
 if secim == "Sistem Bilgisi":
-    st.subheader("💻 Bilgisayar Sistem Bilgileri")
+    st.subheader("💻 Sistem Bilgileri")
     if st.button("Bilgileri Getir"):
-        with st.spinner("Bilgiler taranıyor..."):
+        with st.spinner("Bilgiler okunuyor..."):
             st.write(f"**İşletim Sistemi:** {platform.system()} {platform.release()}")
             st.write(f"**Bilgisayar Adı:** {platform.node()}")
             st.write(f"**İşlemci:** {platform.processor()}")
             try:
                 yerel_ip = socket.gethostbyname(socket.gethostname())
-                st.write(f"**Yerel IP Adresi:** {yerel_ip}")
+                st.write(f"**IP / Host Adresi:** {yerel_ip}")
             except:
                 pass
             st.success("İşlem tamamlandı!")
 
-# 2. Ağ Cihazlarını Tara (Geliştirilmiş Aralık)
-elif secim == "Ağ Cihazlarını Tara":
-    st.subheader("🔍 Yerel Ağ Taraması (Ping Sweep)")
-    st.info("Aynı ağa bağlı olan aktif cihazları listeler.")
-    
-    # Kullanıcı taranacak IP aralığını seçebilsin
-    bitis_araligi = st.slider("Tarama Aralığı (1'den sonuna kadar)", min_value=10, max_value=100, value=50, step=10)
-    
-    if st.button("Ağı Tara"):
-        with st.spinner("Ağdaki cihazlar taranıyor, lütfen bekleyin..."):
-            try:
-                # Doğru yerel IP'yi yakalamaya çalışalım
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect(("8.8.8.8", 80))
-                yerel_ip = s.getsockname()[0]
-                s.close()
-            except:
-                yerel_ip = socket.gethostbyname(socket.gethostname())
-                
-            ip_parcalari = yerel_ip.rsplit('.', 1)[0]
-            st.write(f"[*] Hedef Ağ Bloğu: {ip_parcalari}.1 - {ip_parcalari}.{bitis_araligi}")
-            
-            bulunanlar = []
-            progress_bar = st.progress(0)
-            
-            for i in range(1, bitis_araligi + 1):
-                hedef = f"{ip_parcalari}.{i}"
-                parametre = "-n 1" if platform.system().lower() == "windows" else "-c 1"
-                islem = subprocess.Popen(f"ping {parametre} -w 40 {hedef}", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                islem.wait()
-                
-                if islem.returncode == 0:
-                    bulunanlar.append(hedef)
-                progress_bar.progress(i / bitis_araligi)
-            
-            if bulunanlar:
-                st.success(f"Toplam {len(bulunanlar)} aktif cihaz bulundu:")
-                for cihaz in bulunanlar:
-                    st.code(cihaz)
-            else:
-                st.warning("Aktif cihaz bulunamadı. (Not: Eğer uygulama bulut sunucusunda çalışıyorsa yerel ağı göremez, bilgisayarınızda yerel olarak çalıştırmalısınız.)")
-
-# 3. Port Tara
+# 2. Port Tara (Hedef IP'nin portlarını kontrol eder)
 elif secim == "Port Tara":
-    st.subheader("🔌 Gelişmiş Port Tarayıcı")
-    hedef_ip = st.text_input("Taranacak IP Adresi", "192.168.1.1")
+    st.subheader("🔌 Port Tarayıcı")
+    hedef_ip = st.text_input("Taranacak IP veya Domain (örn: 127.0.0.1 veya google.com)", "127.0.0.1")
     timeout_suresi = st.slider("Zaman Aşımı Süresi (Saniye)", min_value=0.5, max_value=3.0, value=1.0, step=0.5)
     
     if st.button("Portları Tara"):
@@ -127,13 +85,14 @@ elif secim == "Port Tara":
                     pass
             st.success("Tarama tamamlandı.")
 
-# 4. Kayıtlı Wi-Fi'ler
+# 3. Kayıtlı Wi-Fi'ler
 elif secim == "Kayıtlı Wi-Fi'ler":
     st.subheader("📶 Kayıtlı Wi-Fi Ağ Profilleri")
+    st.info("Not: Bu özellik sadece kendi bilgisayarınızda (lokalde) çalışırken bilgisayarınızdaki Wi-Fi profillerini gösterir.")
     if st.button("Wi-Fi Profillerini Listele"):
         with st.spinner("Profiller okunuyor..."):
             try:
                 sonuc = subprocess.check_output("netsh wlan show profiles", shell=True, encoding="latin5")
                 st.text(sonuc)
             except Exception as e:
-                st.error(f"Hata: {e}")
+                st.error(f"Bulut sunucusunda yerel Wi-Fi profilleri okunamaz: {e}")
