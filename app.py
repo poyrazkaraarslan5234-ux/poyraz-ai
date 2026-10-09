@@ -41,7 +41,7 @@ st.markdown("<h1>🛡️ PC-FLIPPER WEB PANELİ</h1>", unsafe_allow_html=True)
 st.write("<p style='text-align: center; color: #888;'>Telefondan ve Bilgisayardan Siber Keşif Merkezi</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# Yan Menü (Hangi işlemi yapmak istiyorsun?)
+# Yan Menü
 secim = st.sidebar.selectbox(
     "Menü Seçin",
     ["Sistem Bilgisi", "Ağ Cihazlarını Tara", "Port Tara", "Kayıtlı Wi-Fi'ler"]
@@ -95,26 +95,36 @@ elif secim == "Ağ Cihazlarını Tara":
             except Exception as e:
                 st.error(f"Hata oluştu: {e}")
 
-# 3. Port Tara
+# 3. Port Tara (Geliştirilmiş Doğruluk)
 elif secim == "Port Tara":
-    st.subheader("🔌 Port Tarayıcı")
+    st.subheader("🔌 Gelişmiş Port Tarayıcı")
     hedef_ip = st.text_input("Taranacak IP Adresi", "192.168.1.1")
+    
+    # Ağ durumuna göre zaman aşımını ayarlama seçeneği (Yanlış sonuçları önlemek için)
+    timeout_suresi = st.slider("Zaman Aşımı Süresi (Saniye)", min_value=0.5, max_value=3.0, value=1.0, step=0.5)
+    
     if st.button("Portları Tara"):
-        with st.spinner(f"{hedef_ip} taranıyor..."):
-            portlar = [21, 22, 23, 80, 443, 445, 3306, 8080]
+        with st.spinner(f"{hedef_ip} taranıyor, lütfen bekleyin..."):
+            portlar = [21, 22, 23, 80, 443, 445, 3306, 8080, 8443]
+            
             for port in portlar:
                 try:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    s.settimeout(0.3)
+                    s.settimeout(timeout_suresi)
                     sonuc = s.connect_ex((hedef_ip, port))
+                    
                     if sonuc == 0:
                         st.write(f"🟢 **Port {port}**: AÇIK")
                     else:
-                        st.write(f"🔴 **Port {port}**: Kapalı")
+                        st.write(f"🔴 **Port {port}**: Kapalı / Reddedildi")
+                        
                     s.close()
-                except:
-                    pass
-            st.success("Port taraması bitti.")
+                except socket.timeout:
+                    st.write(f"🟡 **Port {port}**: Zaman Aşımı (Filtrelenmiş veya Yanıt Yok)")
+                except Exception as e:
+                    st.write(f"⚪ **Port {port}**: Erişilemedi ({e})")
+                    
+            st.success("Port taraması tamamlandı.")
 
 # 4. Kayıtlı Wi-Fi'ler
 elif secim == "Kayıtlı Wi-Fi'ler":
