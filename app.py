@@ -114,17 +114,20 @@ elif secim == "⌨️ BadUSB / Payload Oluşturucu":
     st.text_area("Üretilen DuckyScript Kodu:", kod, height=150)
     st.download_button("Payload Dosyasını İndir (.txt)", kod, file_name="payload.txt")
 
-# 4. Kayıtlı Wi-Fi'ler
+# 4. Kayıtlı Wi-Fi'ler (İşletim Sistemi Korumalı)
 elif secim == "📶 Kayıtlı Wi-Fi Profilleri":
     st.subheader("📶 Kayıtlı Wi-Fi Ağ Profilleri")
-    st.info("Bilgisayarın hafızasındaki Wi-Fi ağlarını listeler (Lokal çalıştırıldığında tam sonuç verir).")
+    st.info("Bilgisayarın hafızasındaki Wi-Fi ağlarını listeler.")
     if st.button("Wi-Fi Profillerini Listele"):
-        with st.spinner("Okunuyor..."):
-            try:
-                sonuc = subprocess.check_output("netsh wlan show profiles", shell=True, encoding="latin5")
-                st.text(sonuc)
-            except Exception as e:
-                st.error(f"Hata: {e}")
+        if platform.system().lower() != "windows":
+            st.warning("⚠️ Bu özellik yalnızca Windows yüklü bir bilgisayarda (lokalde) çalışır! Bulut sunucuları Linux tabanlı olduğu için Windows Wi-Fi komutlarını (`netsh`) çalıştıramaz.")
+        else:
+            with st.spinner("Okunuyor..."):
+                try:
+                    sonuc = subprocess.check_output("netsh wlan show profiles", shell=True, encoding="latin5")
+                    st.text(sonuc)
+                except Exception as e:
+                    st.error(f"Hata: {e}")
 
 # 5. Kripto & Hash Araçları
 elif secim == "🔐 Kripto & Hash Araçları":
