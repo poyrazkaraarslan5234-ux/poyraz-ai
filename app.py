@@ -8,6 +8,8 @@ import random
 import urllib.request
 import json
 import math
+import ssl
+import datetime
 
 # Sayfa Yapılandırması
 st.set_page_config(
@@ -52,6 +54,11 @@ secim = st.sidebar.selectbox(
     [
         "⌨️ BadUSB / DuckyScript Stüdyosu",
         "🔓 Hash Şifre Kırıcı (Gelişmiş Wordlist)",
+        "🔑 Hash Üretici (Generator)",
+        "🔍 Hash Türü & Kripto Analizcisi",
+        "🔒 JWT (JSON Web Token) Çözümleyici",
+        "🌐 SSL / TLS Sertifika Denetçisi",
+        "🛡️ HTTP Güvenlik Başlıkları (Security Headers)",
         "🔑 Güçlü Şifre Üretici & Analizci",
         "⚡ Şifre Kırılma Süresi (Brute-Force)",
         "📊 Şifre Entropi (Rastgelelik) Ölçer",
@@ -59,6 +66,7 @@ secim = st.sidebar.selectbox(
         "🌐 Ağ Alt Ağ (Subnet) Hesaplayıcı",
         "💉 Web Güvenliği Payload Kütüphanesi",
         "📜 Mini Log Analiz Aracı",
+        "🚨 Olay Müdahale (Incident Response) Rehberi",
         "📝 Base64 & URL Encoder/Decoder",
         "🌐 HTTP İstek & API Test Aracı",
         "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi",
@@ -110,7 +118,115 @@ elif secim == "🔓 Hash Şifre Kırıcı (Gelişmiş Wordlist)":
             if not bulundu:
                 st.error("❌ Eşleşme sağlanamadı.")
 
-# 3. Güçlü Şifre Üretici & Analizci
+# 3. Hash Üretici (Generator) - [YENİ]
+elif secim == "🔑 Hash Üretici (Generator)":
+    st.subheader("🔑 Kriptografik Hash Üretim Aracı")
+    st.info("İstediğiniz düz metni anında popüler hash formatlarına (MD5, SHA-1, SHA-256) dönüştürür.")
+    
+    duz_metin = st.text_input("Hash'lenecek Metin / Şifre:", "poyraz123")
+    
+    if st.button("Hash Üret"):
+        md5_sonuc = hashlib.md5(duz_metin.encode()).hexdigest()
+        sha1_sonuc = hashlib.sha1(duz_metin.encode()).hexdigest()
+        sha256_sonuc = hashlib.sha256(duz_metin.encode()).hexdigest()
+        
+        st.write(f"📌 **MD5:** `{md5_sonuc}`")
+        st.write(f"📌 **SHA-1:** `{sha1_sonuc}`")
+        st.write(f"📌 **SHA-256:** `{sha256_sonuc}`")
+        st.success("Hash değerleri başarıyla oluşturuldu!")
+
+# 4. Hash Türü & Kripto Analizcisi
+elif secim == "🔍 Hash Türü & Kripto Analizcisi":
+    st.subheader("🔍 Hash Karakter ve Algoritma Tanımlayıcı")
+    girilen_hash = st.text_input("Analiz Edilecek Hash / Metin Değeri:", "5f4dcc3b5aa765d61d8327deb882cf99")
+    
+    if st.button("Hash Türünü Analiz Et"):
+        uzunluk = len(girilen_hash.strip())
+        st.write(f"📏 **Karakter Uzunluğu:** `{uzunluk}`")
+        if uzunluk == 32:
+            st.success("🟢 Muhtemel Tür: **MD5** veya **NTLM** (32 karakter, Hex formatı)")
+        elif uzunluk == 40:
+            st.success("🟢 Muhtemel Tür: **SHA-1** veya **RIPEMD-160** (40 karakter, Hex formatı)")
+        elif uzunluk == 64:
+            st.success("🟢 Muhtemel Tür: **SHA-256** veya **SHA3-256** (64 karakter, Hex formatı)")
+        elif uzunluk == 128:
+            st.success("🟢 Muhtemel Tür: **SHA-512** veya **Whirlpool** (128 karakter, Hex formatı)")
+        else:
+            st.warning("🟡 Belirtilen uzunluk standart hash formatlarıyla doğrudan eşleşmiyor.")
+
+# 5. JWT (JSON Web Token) Çözümleyici
+elif secim == "🔒 JWT (JSON Web Token) Çözümleyici":
+    st.subheader("🔒 JWT Token İnceleme ve Çözümleme Aracı")
+    jwt_input = st.text_area("JWT Token Değerini Yapıştırın:", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlBveXJheiIsImFkbWluIjp0cnVlfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
+    
+    if st.button("JWT Çözümle"):
+        try:
+            parcalar = jwt_input.split('.')
+            if len(parcalar) >= 2:
+                header_padding = parcalar[0] + '=' * (-len(parcalar[0]) % 4)
+                header_decoded = base64.urlsafe_b64decode(header_padding).decode('utf-8')
+                payload_padding = parcalar[1] + '=' * (-len(parcalar[1]) % 4)
+                payload_decoded = base64.urlsafe_b64decode(payload_padding).decode('utf-8')
+                st.subheader("📋 Header (Başlık):")
+                st.json(json.loads(header_decoded))
+                st.subheader("📦 Payload (Veri / Yetkiler):")
+                st.json(json.loads(payload_decoded))
+                st.success("JWT başarıyla çözümlendi!")
+            else:
+                st.error("❌ Hatalų JWT formatı!")
+        except Exception as e:
+            st.error(f"Hata: {e}")
+
+# 6. SSL / TLS Sertifika Denetçisi
+elif secim == "🌐 SSL / TLS Sertifika Denetçisi":
+    st.subheader("🌐 Web Sitesi SSL Sertifika Güvenlik Analizi")
+    site_adi = st.text_input("Hedef Alan Adı (Örn: github.com)", "github.com")
+    
+    if st.button("Sertifikayı Sorgula"):
+        with st.spinner("İnceleniyor..."):
+            try:
+                context = ssl.create_default_context()
+                with socket.create_connection((site_adi, 443), timeout=5) as sock:
+                    with context.wrap_sock(sock, server_hostname=site_adi) as ssock:
+                        cert = ssock.getpeercert()
+                        subject = dict(x[0] for x in cert.get('subject', []))
+                        issuer = dict(x[0] for x in cert.get('issuer', []))
+                        not_after = cert.get('notAfter')
+                        st.success(f"🔒 **Sertifika Sahibi (CN):** `{subject.get('commonName', 'Bilinmiyor')}`")
+                        st.info(f"🏛️ **Veren Otorite:** `{issuer.get('organizationName', 'Bilinmiyor')}`")
+                        st.write(f"📅 **Son Geçerlilik:** `{not_after}`")
+            except Exception as e:
+                st.error(f"Hata: {e}")
+
+# 7. HTTP Güvenlik Başlıkları Denetçisi - [YENİ]
+elif secim == "🛡️ HTTP Güvenlik Başlıkları (Security Headers)":
+    st.subheader("🛡️ Web Sitesi Güvenlik Başlıkları Denetçisi")
+    st.info("Hedef web sitesinin HTTP yanıt başlıklarını inceleyerek güvenlik önlemlerini kontrol eder.")
+    
+    hedef_url = st.text_input("Test Edilecek URL", "https://github.com")
+    
+    if st.button("Başlıkları Tara"):
+        with st.spinner("Başlıklar taranıyor..."):
+            try:
+                req = urllib.request.Request(hedef_url, headers={'User-Agent': 'CyberSuite-Scanner'})
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    headers = response.headers
+                    guvenlik_basliklari = [
+                        'Content-Security-Policy',
+                        'Strict-Transport-Security',
+                        'X-Frame-Options',
+                        'X-Content-Type-Options',
+                        'X-XSS-Protection'
+                    ]
+                    for baslik in guvenlik_basliklari:
+                        if baslik in headers:
+                            st.success(f"🟢 **{baslik}:** `{headers.get(baslik)}`")
+                        else:
+                            st.warning(f"🔴 **{baslik}:** Bulunamadı (Eksik Güvenlik Başlığı)")
+            except Exception as e:
+                st.error(f"Bağlantı Hatası: {e}")
+
+# 8. Güçlü Şifre Üretici & Analizci
 elif secim == "🔑 Güçlü Şifre Üretici & Analizci":
     st.subheader("🔑 Kırılmaz Parola Üretici & Güvenlik Testi")
     uzunluk = st.slider("Şifre Uzunluğu", min_value=8, max_value=32, value=16)
@@ -120,7 +236,7 @@ elif secim == "🔑 Güçlü Şifre Üretici & Analizci":
         st.code(sifre, language="text")
         st.success("Güçlü şifre üretildi!")
 
-# 4. Şifre Kırılma Süresi (Brute-Force)
+# 9. Şifre Kırılma Süresi (Brute-Force)
 elif secim == "⚡ Şifre Kırılma Süresi (Brute-Force)":
     st.subheader("⚡ Brute-Force Kırılma Süresi Simülatörü")
     input_sifre = st.text_input("Test Edilecek Metin / Şifre", "Poyraz123*", type="password")
@@ -134,7 +250,7 @@ elif secim == "⚡ Şifre Kırılma Süresi (Brute-Force)":
         else:
             st.success(f"🟢 **Kırılma Süresi:** {saniye/31536000:,.1f} yıl!")
 
-# 5. Şifre Entropi Ölçer
+# 10. Şifre Entropi Ölçer
 elif secim == "📊 Şifre Entropi (Rastgelelik) Ölçer":
     st.subheader("📊 Şifre Entropi (Bit Cinsinden Rastgelelik) Analizi")
     ent_sifre = st.text_input("Analiz Edilecek Şifre:", type="password")
@@ -146,7 +262,7 @@ elif secim == "📊 Şifre Entropi (Rastgelelik) Ölçer":
         else:
             st.warning("🟡 Geliştirilebilir Entropi")
 
-# 6. Web & IP İstihbaratı (OSINT)
+# 11. Web & IP İstihbaratı (OSINT)
 elif secim == "🌐 Web & IP İstihbaratı (OSINT)":
     st.subheader("🌐 Web Sitesi ve IP İstihbarat Aracı")
     hedef_site = st.text_input("Hedef Domain (Örn: github.com veya google.com)", "google.com")
@@ -163,7 +279,7 @@ elif secim == "🌐 Web & IP İstihbaratı (OSINT)":
             except Exception as e:
                 st.error(f"Hata: {e}")
 
-# 7. Ağ Alt Ağ (Subnet) Hesaplayıcı
+# 12. Ağ Alt Ağ (Subnet) Hesaplayıcı
 elif secim == "🌐 Ağ Alt Ağ (Subnet) Hesaplayıcı":
     st.subheader("🌐 Ağ Alt Ağ (CIDR / Subnet) Hesaplayıcı")
     cidr_degeri = st.slider("CIDR Prefix Değeri", min_value=8, max_value=30, value=24)
@@ -173,13 +289,13 @@ elif secim == "🌐 Ağ Alt Ağ (Subnet) Hesaplayıcı":
     st.write(f"🖥️ **Toplam IP Sayısı:** `{toplam_ip:,}`")
     st.write(f"👥 **Kullanılabilir Host Sayısı:** `{kullanilabilir_ip:,}`")
 
-# 8. Web Güvenliği Payload Kütüphanesi
+# 13. Web Güvenliği Payload Kütüphanesi
 elif secim == "💉 Web Güvenliği Payload Kütüphanesi":
     st.subheader("💉 Web Güvenliği Eğitim Payload Kütüphanesi")
     kodlar = "<script>alert('XSS')</script>\n' OR '1'='1\n../../../../etc/passwd"
     st.text_area("Örnek Payload Kodları:", kodlar, height=120)
 
-# 9. Mini Log Analiz Aracı
+# 14. Mini Log Analiz Aracı
 elif secim == "📜 Mini Log Analiz Aracı":
     st.subheader("📜 Sunucu Log Dosyası Filtreleme Aracı")
     varsayilan_log = '192.168.1.10 - - "GET /index.php" 200\n10.0.0.5 - - "GET /admin.php" 403'
@@ -188,21 +304,31 @@ elif secim == "📜 Mini Log Analiz Aracı":
         for satir in log_input.split("\n"):
             st.code(satir)
 
-# 10. Base64 & URL Encoder/Decoder
+# 15. Olay Müdahale Rehberi - [YENİ]
+elif secim == "🚨 Olay Müdahale (Incident Response) Rehberi":
+    st.subheader("🚨 Siber Güvenlik Olay Müdahale Adımları")
+    st.markdown("""
+    * **1. İzolasyon (Containment):** Enfekte veya saldırıya uğrayan cihazı ağdan (Ethernet/Wi-Fi) derhal ayırın.
+    * **2. Delil Toplama (Eradication):** Bellek (RAM) ve log kayıtlarının imajını alarak delilleri kayda geçirin.
+    * **3. Kök Neden Analizi:** Sızıntının hangi açıktan veya zafiyetten kaynaklandığını tespit edin.
+    * **4. İyileştirme & Yama:** Açığı kapatıp sistemleri güvenli bir şekilde yeniden ayağa kaldırın.
+    """)
+
+# 16. Base64 & URL Encoder/Decoder
 elif secim == "📝 Base64 & URL Encoder/Decoder":
     st.subheader("📝 Metin Kodlama ve Çözme Aracı")
     metin_input = st.text_area("İşlem Yapılacak Metin:", "Poyraz")
     if st.button("Base64 Encode"):
         st.code(base64.b64encode(metin_input.encode()).decode())
 
-# 11. HTTP İstek & API Test Aracı
+# 17. HTTP İstek & API Test Aracı
 elif secim == "🌐 HTTP İstek & API Test Aracı":
     st.subheader("🌐 HTTP İstek Test Aracı")
     api_url = st.text_input("URL", "https://httpbin.org/get")
     if st.button("GET İsteği At"):
         st.success("Durum Kodu: 200 OK")
 
-# 12. Port Tarayıcı & Risk Matrisi
+# 18. Port Tarayıcı & Risk Matrisi
 elif secim == "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi":
     st.subheader("🔌 Port Tarayıcı & Risk Matrisi")
     hedef_ip = st.text_input("Hedef IP", "127.0.0.1")
@@ -210,12 +336,12 @@ elif secim == "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi":
         st.write("🟢 Port 80: AÇIK")
         st.write("🟢 Port 443: AÇIK")
 
-# 13. Sistem & Ağ Bilgisi
+# 19. Sistem & Ağ Bilgisi
 elif secim == "💻 Sistem & Ağ Bilgisi":
     st.subheader("💻 Bilgisayar & Sistem Bilgileri")
     st.write(f"**İşletim Sistemi:** {platform.system()} {platform.release()}")
 
-# 14. Oltalama Farkındalık Rehberi
+# 20. Oltalama Farkındalık Rehberi
 elif secim == "🛡️ Oltalama (Phishing) Farkındalık Rehberi":
     st.subheader("🛡️ Sosyal Mühendislik ve Oltalama Analizi")
     st.markdown("* Sahte domainlere ve aciliyet hissine karşı uyanık olun.")
