@@ -52,20 +52,16 @@ secim = st.sidebar.selectbox(
     [
         "🐬 Flipper Zero Yetenek & Özellik Rehberi",
         "🌐 Web & IP İstihbaratı (OSINT)",
-        "🔓 Hash Şifre Kırıcı (Wordlist Simülasyonu)",
-        "🔑 Güçlü Şifre Üretici & Analizci",
+        "🔓 Hash Şifre Kırıcı (Gelişmiş Wordlist)",
+        "🔑 Güçlü Şيفre Üretici & Analizci",
         "⚡ Şifre Kırılma Süresi (Brute-Force)",
         "📊 Şifre Entropi (Rastgelelik) Ölçer",
         "📝 Base64 & URL Encoder/Decoder",
         "🌐 HTTP İstek & API Test Aracı",
-        "🕵️‍♂️ Cihaz Parmak İzi (Fingerprint)",
         "💻 Sistem & Ağ Bilgisi",
         "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi",
         "⌨️ BadUSB / DuckyScript Stüdyosu",
-        "📡 Sub-GHz & RF Frekans Rehberi",
         "📻 Kızılötesi (IR) Kumanda Kod Üretici",
-        "🔑 RFID / NFC / iButton UID Üretici",
-        "📌 GPIO Pinout & Donanım Rehberi",
         "🛡️ Oltalama (Phishing) Farkındalık Rehberi"
     ]
 )
@@ -95,33 +91,52 @@ elif secim == "🌐 Web & IP İstihbaratı (OSINT)":
             except Exception as e:
                 st.error(f"Hata: {e}")
 
-# 2. Hash Şifre Kırıcı (Wordlist Simülasyonu) - [YENİ]
-elif secim == "🔓 Hash Şifre Kırıcı (Wordlist Simülasyonu)":
-    st.subheader("🔓 MD5 Hash Kırıcı (Sözlük Saldırısı)")
-    st.info("Elinizdeki bir MD5 hash değerini, yaygın şifrelerin bulunduğu yerleşik sözlük (wordlist) ile eşleştirerek çözmeye çalışır.")
+# 2. Hash Şifre Kırıcı (Gelişmiş Wordlist) - [GÜNCELLENDİ]
+elif secim == "🔓 Hash Şifre Kırıcı (Gelişmiş Wordlist)":
+    st.subheader("🔓 Gelişmiş Hash Kırıcı (Sözlük Saldırısı)")
+    st.info("Farklı algoritmaları (MD5, SHA-1, SHA-256) destekleyen ve kendi özel wordlist'inizi test edebileceğiniz simülatör.")
     
-    # Test için örnek bir hash üretelim veya kullanıcı girsin
+    # Hash Algoritması Seçimi
+    algo = st.selectbox("Hash Algoritması Seçin", ["MD5", "SHA-1", "SHA-256"])
+    
+    # Örnek şifre üzerinden hash üretme yardımcısı
     ornek_sifre = "poyraz123"
-    ornek_hash = hashlib.md5(ornek_sifre.encode()).hexdigest()
+    if algo == "MD5":
+        ornek_hash = hashlib.md5(ornek_sifre.encode()).hexdigest()
+    elif algo == "SHA-1":
+        ornek_hash = hashlib.sha1(ornek_sifre.encode()).hexdigest()
+    else:
+        ornek_hash = hashlib.sha256(ornek_sifre.encode()).hexdigest()
+        
+    hedef_hash = st.text_input(f"Çözülecek {algo} Hash Değeri:", ornek_hash)
     
-    hedef_hash = st.text_input("Çözülecek MD5 Hash Değeri:", ornek_hash)
+    # Kullanıcının kendi wordlist'ini girebilmesi için text_area
+    varsayilan_wordlist = "123456\npassword\nadmin\npoyraz\npoyraz123\n12345678\nqwerty\nturkey123\nankara52\nmuhabeat"
+    wordlist_input = st.text_area("Test Edilecek Kelime Listesi (Wordlist - Her satıra bir kelime):", varsayilan_wordlist, height=150)
     
     if st.button("Hash'i Kır (Saldırı Başlat)"):
         with st.spinner("Sözlük taranıyor..."):
-            # Örnek wordlist
-            wordlist = ["123456", "password", "admin", "poyraz", "poyraz123", "12345678", "qwerty", "turkey123"]
+            wordlist = [w.strip() for w in wordlist_input.split("\n") if w.strip()]
             bulundu = False
+            
             for kelime in wordlist:
-                denenen_hash = hashlib.md5(kelime.encode()).hexdigest()
-                if denenen_hash == hedef_hash.lower():
-                    st.success(f"🎉 **Şifre Bulundu!** Açık Hali: `{kelime}`")
+                if algo == "MD5":
+                    denenen_hash = hashlib.md5(kelime.encode()).hexdigest()
+                elif algo == "SHA-1":
+                    denenen_hash = hashlib.sha1(kelime.encode()).hexdigest()
+                else:
+                    denenen_hash = hashlib.sha256(kelime.encode()).hexdigest()
+                    
+                if denenen_hash == hedef_hash.strip().lower():
+                    st.success(f"🎉 **Şifre Başarıyla Bulundu!** Açık Hali: `{kelime}`")
                     bulundu = True
                     break
+                    
             if not bulundu:
-                st.error("❌ Bu hash verilen yerleşik sözlükte bulunamadı.")
+                st.error("❌ Eşleşme sağlanamadı! Girdiğiniz wordlist içinde bu hash'e ait şifre yok.")
 
 # 3. Güçlü Şifre Üretici & Analizci
-elif secim == "🔑 Güçlü Şifre Üretici & Analizci":
+elif secim == "🔑 Güçlü Şيفre Üretici & Analizci":
     st.subheader("🔑 Kırılmaz Parola Üretici & Güvenlik Testi")
     uzunluk = st.slider("Şifre Uzunluğu", min_value=8, max_value=32, value=16)
     if st.button("Güçlü Şifre Üret"):
@@ -150,11 +165,9 @@ elif secim == "⚡ Şifre Kırılma Süresi (Brute-Force)":
         else:
             st.success(f"🟢 **Kırılma Süresi:** {saniye/31536000:,.1f} yıl!")
 
-# 5. Şifre Entropi Ölçer - [YENİ]
+# 5. Şifre Entropi Ölçer
 elif secim == "📊 Şifre Entropi (Rastgelelik) Ölçer":
     st.subheader("📊 Şifre Entropi (Bit Cinsinden Rastgelelik) Analizi")
-    st.info("Şifrenizin içerdiği bilgi yoğunluğunu (entropi) matematiksel olarak bit cinsinden ölçer.")
-    
     ent_sifre = st.text_input("Analiz Edilecek Şifre:", type="password")
     if ent_sifre:
         uzunluk = len(ent_sifre)
@@ -168,13 +181,13 @@ elif secim == "📊 Şifre Entropi (Rastgelelik) Ölçer":
             entropi = uzunluk * math.log2(havuz)
             st.write(f"📈 **Entropi Değeri:** `{entropi:.2f} bits`")
             if entropi < 40:
-                st.error("🔴 Zayıf Entropi (Kolay tahmin edilebilir)")
+                st.error("🔴 Zayıf Entropi")
             elif entropi < 60:
                 st.warning("🟡 Orta Düzey Entropi")
             else:
-                st.success("🟢 Mükemmel Entropi (Yüksek Rastgelelik)")
+                st.success("🟢 Mükemmel Entropi")
 
-# 6. Base64 & URL Encoder/Decoder - [YENİ]
+# 6. Base64 & URL Encoder/Decoder
 elif secim == "📝 Base64 & URL Encoder/Decoder":
     st.subheader("📝 Metin Kodlama ve Çözme Aracı")
     islem_tipi = st.selectbox("İşlem Seçin", ["Base64 Encode", "Base64 Decode"])
@@ -191,7 +204,7 @@ elif secim == "📝 Base64 & URL Encoder/Decoder":
         except Exception as e:
             st.error(f"Hata: {e}")
 
-# 7. HTTP İstek & API Test Aracı - [YENİ]
+# 7. HTTP İstek & API Test Aracı
 elif secim == "🌐 HTTP İstek & API Test Aracı":
     st.subheader("🌐 HTTP İstek Test Aracı (Request Builder)")
     api_url = st.text_input("Test Edilecek URL", "https://httpbin.org/get")
@@ -205,20 +218,14 @@ elif secim == "🌐 HTTP İstek & API Test Aracı":
         except Exception as e:
             st.error(f"Bağlantı Hatası: {e}")
 
-# 8. Cihaz Parmak İzi (Fingerprint)
-elif secim == "🕵️‍♂️ Cihaz Parmak İzi (Fingerprint)":
-    st.subheader("🕵️‍♂️ Tarayıcı ve Bağlantı Parmak İzi")
-    st.write(f"🖥️ **Platform / İşletim Sistemi:** `{platform.platform()}`")
-    st.write(f"🐍 **Python Sürümü:** `{platform.python_version()}`")
-
-# 9. Sistem & Ağ Bilgisi
+# 8. Sistem & Ağ Bilgisi
 elif secim == "💻 Sistem & Ağ Bilgisi":
     st.subheader("💻 Bilgisayar & Sistem Bilgileri")
     if st.button("Sistem Bilgilerini Getir"):
         st.write(f"**İşletim Sistemi:** {platform.system()} {platform.release()}")
         st.write(f"**Bilgisayar Adı:** {platform.node()}")
 
-# 10. Port Tarayıcı & Risk Matrisi
+# 9. Port Tarayıcı & Risk Matrisi
 elif secim == "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi":
     st.subheader("🔌 Port Tarayıcı & Güvenlik Risk Matrisi")
     hedef_ip = st.text_input("Taranacak Hedef (IP veya Domain)", "127.0.0.1")
@@ -234,35 +241,35 @@ elif secim == "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi":
                 s.close()
             except: pass
 
-# 11. BadUSB / DuckyScript Stüdyosu
+# 10. BadUSB / DuckyScript Stüdyosu
 elif secim == "⌨️ BadUSB / DuckyScript Stüdyosu":
     st.subheader("⌨️ BadUSB Payload Stüdyosu")
     kod = "DELAY 1000\nGUI r\nDELAY 200\nSTRING notepad\nENTER\n"
     st.text_area("DuckyScript Kodu:", kod)
 
-# 12. Sub-GHz & RF Frekans Rehberi
-elif secim == "📡 Sub-GHz & RF Frekans Rehberi":
-    st.subheader("📡 Alt-GHz Radyo Frekans Kütüphanesi")
-    st.markdown("* **315 / 433.92 MHz:** Garaj kapıları ve bariyerler.")
-
-# 13. Kızılötesi (IR) Kumanda Üretici
+# 11. Kızılötesi (IR) Kumanda Üretici
 elif secim == "📻 Kızılötesi (IR) Kumanda Üretici":
     st.subheader("📻 Kızılötesi (IR) Kontrol Simülatörü")
-    st.write("IR kumanda şablon üreticisi aktif.")
+    cihaz = st.selectbox("Cihaz Türü Seçin", ["Televizyon (TV)", "Klima (AC)", "Ses Sistemi (Audio)"])
+    marka = st.text_input("Marka Adı (Örn: Samsung, Sony, LG)", "Samsung")
+    if st.button("IR Kodunu Üret"):
+        ir_ornek = f"""#
+# Flipper Zero IR File
+# Brand: {marka} - Device: {cihaz}
+#
+name: {marka}_Power_Toggle
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 07 00 00 00"""
+        st.code(ir_ornek, language="text")
+        st.success("IR komut dosyası oluşturuldu!")
 
-# 14. RFID / NFC / iButton UID Üretici
-elif secim == "🔑 RFID / NFC / iButton UID Üretici":
-    st.subheader("🔑 RFID, NFC ve iButton UID Üretici")
-    if st.button("Rastgele UID Üret"):
-        uid = f"{random.randint(0, 255):02X} {random.randint(0, 255):02X}"
-        st.write(f"UID: `{uid}`")
-
-# 15. GPIO Pinout Rehberi
-elif secim == "📌 GPIO Pinout & Donanım Rehberi":
-    st.subheader("📌 GPIO Bağlantıları")
-    st.markdown("* **Pin 1-2:** 3V3 / 5V Güç")
-
-# 16. Phishing Farkındalık Rehberi
+# 12. Phishing Farkındalık Rehberi
 elif secim == "🛡️ Oltalama (Phishing) Farkındalık Rehberi":
     st.subheader("🛡️ Sosyal Mühendislik ve Oltalama Analizi")
-    st.markdown("* Sahte domainlere ve aciliyet hissine dikkat edin.")
+    st.markdown("""
+    * **Sahte Domainler:** `g00gle.com` benzeri alan adlarına dikkat edin.
+    * **Aciliyet Hissi:** Psikolojik baskı içeren mesajlara karşı uyanık olun.
+    * **2FA:** Tüm hesaplarınızda iki aşamalı doğrulama kullanın.
+    """)
