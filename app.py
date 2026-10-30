@@ -10,7 +10,6 @@ import json
 import math
 import ssl
 import pandas as pd
-from datetime import datetime
 
 # Sayfa Yapılandırması
 st.set_page_config(
@@ -45,15 +44,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Session State Log Listesi Başlatma
-if 'phishing_logs' not in st.session_state:
-    st.session_state['phishing_logs'] = []
-
 st.markdown("<h1>🛡️ PC & MOBILE CYBER SUITE PRO</h1>", unsafe_allow_html=True)
 st.write("<p style='text-align: center; color: #888;'>Saf Siber Güvenlik & Penetrasyon Test Laboratuvarı</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# Modül Listesi
+# Sadeleştirilmiş ve Güçlendirilmiş Modül Listesi
 secim = st.sidebar.selectbox(
     "Siber Güvenlik Modülleri",
     [
@@ -72,7 +67,7 @@ secim = st.sidebar.selectbox(
         "🌐 HTTP İstek & API Test Aracı",
         "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi",
         "💻 Sistem & Ağ Bilgisi",
-        "🎣 Oltalama Mesajı & Kurban Yakalama Sistemi"
+        "🎣 Eğitim Amaçlı Oltalama Şablon Üreticisi"
     ]
 )
 
@@ -123,6 +118,7 @@ elif secim == "📍 IP Adresi Bulma & Detaylı Sorgulama":
                         st.write(f"🌍 **Ülke:** {veri.get('country')} ({veri.get('countryCode')})")
                         st.write(f"🏙️ **Şehir / Bölge:** {veri.get('city')} / {veri.get('regionName')}")
                         st.write(f"🏢 **İnternet Servis Sağlayıcı (ISP):** {veri.get('isp')}")
+                        st.write(f"📡 **Organizasyon / AS:** {veri.get('org')} ({veri.get('as')})")
                     else:
                         st.error("❌ Geçersiz IP adresi veya sorgu başarısız oldu!")
             except Exception as e:
@@ -341,62 +337,39 @@ elif secim == "💻 Sistem & Ağ Bilgisi":
     st.write(f"İşletim Sistemi: {platform.system()} {platform.release()}")
     st.write(f"Makine Adı: {socket.gethostname()}")
 
-# 16. Oltalama Mesajı & Kurban Yakalama Sistemi (YENİ VE TAMAMLANMIŞ)
-elif secim == "🎣 Oltalama Mesajı & Kurban Yakalama Sistemi":
-    st.subheader("🎣 Oltalama (Phishing) Mesajı & Kurban Takip Laboratuvarı")
-    st.info("Bu modül, hedefe gönderilecek mesajı (içindeki URL ile birlikte) hazırlar ve tıklayıp form dolduran kişilerin bilgilerini ekrana düşürür.")
+# 16. Eğitim Amaçlı Oltalama Şablon Üreticisi (YENİ)
+elif secim == "🎣 Eğitim Amaçlı Oltalama Şablon Üreticisi":
+    st.subheader("🎣 Eğitim Amaçlı Oltalama (Phishing) Şablon Üreticisi")
+    st.info("Bu modül, siber güvenlik farkındalık eğitimleri ve oltalama simülasyonları için güvenli HTML giriş sayfası şablonları üretir.")
     
-    tab1, tab2, tab3 = st.tabs(["✉️ Mesaj ve URL Oluştur", "🖥️ Kurban Giriş Simülasyonu", "📊 Yakalanan Kurban Logları"])
+    sim_turu = st.selectbox("Simülasyon Şablonu", ["Kurumsal E-Posta Giriş Sayfası", "Bulut Depolama Oturum Açma", "Şifre Sıfırlama Sayfası"])
     
-    with tab1:
-        st.markdown("### 📨 Oltalama Mesajı Taslağı")
-        servis_turu = st.selectbox("Simülasyon Senaryosu", ["Kurumsal E-Posta Doğrulama", "Bulut Depolama Şifre Güncelleme"])
-        ozel_url = st.text_input("Mesaj İçindeki Sahte URL:", "https://guvenlik-kontrol-merkezi.com/login")
-        
-        mesaj_sablonu = f"""Konu: 🚨 ACİL: {servis_turu} ve Güvenlik Onayı Gereklidir!
-
-Değerli Çalışanımız,
-Bilgi İşlem departmanı güvenlik politikaları gereği hesabınızın doğrulama süresi dolmuştur. 
-Lütfen 24 saat içinde aşağıdaki bağlantı üzerinden şifrenizi güncelleyiniz:
-
-🔗 {ozel_url}
-
-Not: İşlem yapılmazsa sistem erişiminiz askıya alınacaktır."""
-
-        st.text_area("Hedef Kişiye Gönderilecek Mesaj:", mesaj_sablonu, height=180)
-        st.download_button("Mesajı İndir (.txt)", mesaj_sablonu, file_name="phishing_mesaj.txt")
-
-    with tab2:
-        st.markdown("### 🖥️ Kurbanın Gireceği Sahte Sayfa (Simülasyon)")
-        st.warning("Hedef kişi mesajdaki URL'ye tıkladığında bu sahte giriş ekranıyla karşılaşır. Bilgileri girip 'Giriş Yap' dediğinde sistem logları yakalar.")
-        
-        with st.form("kurban_giris_formu"):
-            k_adi = st.text_input("Kullanıcı Adı / E-Posta / Telefon")
-            sifre = st.text_input("Şifre", type="password")
-            form_gonder = st.form_submit_button("Giriş Yap / Şifreyi Güncelle")
-            
-            if form_gonder:
-                if k_adi and sifre:
-                    yeni_kurban = {
-                        "Zaman": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "IP / Konum": "192.168.1.55 (Simüle Edilen IP)",
-                        "Cihaz / Tarayıcı": platform.system() + " / Chrome Browser",
-                        "Girilen Kullanıcı": k_adi,
-                        "Yakalanan Şifre": sifre
-                    }
-                    st.session_state['phishing_logs'].append(yeni_kurban)
-                    st.success("🚨 BAŞARILI! Kurbanın girdiği şifre ve cihaz bilgileri yakalandı!")
-                else:
-                    st.error("Lütfen tüm alanları doldurun.")
-
-    with tab3:
-        st.markdown("### 📊 Canlı Kurban Log Paneli")
-        if st.button("Tüm Logları Temizle"):
-            st.session_state['phishing_logs'] = []
-            st.rerun()
-            
-        if len(st.session_state['phishing_logs']) > 0:
-            df_kurbanlar = pd.DataFrame(st.session_state['phishing_logs'])
-            st.table(df_kurbanlar)
-        else:
-            st.info("Henüz yakalanan kurban yok. 'Kurban Giriş Simülasyonu' sekmesinden test edebilirsin.")
+    if st.button("Eğitim Şablonu Üret"):
+        html_code = f"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>{sim_turu} - Güvenlik Simülasyonu</title>
+    <style>
+        body {{ background: #f4f4f4; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }}
+        .box {{ background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 350px; text-align: center; }}
+        .warning {{ background: #ff5500; color: white; padding: 10px; font-size: 12px; margin-bottom: 15px; border-radius: 4px; font-weight: bold; }}
+        input {{ width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }}
+        button {{ width: 100%; padding: 10px; background: #333; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }}
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="warning">🚨 EĞİTİM AMAÇLI SİMÜLASYON SAYFASIDIR.<br>Gerçek şifrenizi girmeyiniz!</div>
+        <h2>{sim_turu}</h2>
+        <form>
+            <input type="text" placeholder="Kullanıcı Adı / E-Posta" required>
+            <input type="password" placeholder="Şifre" required>
+            <button type="submit">Giriş Yap</button>
+        </form>
+    </div>
+</body>
+</html>"""
+        st.success("Eğitim şablonu başarıyla oluşturuldu!")
+        st.text_area("Üretilen HTML Kodu:", html_code, height=200)
+        st.download_button("Şablonu İndir (.html)", html_code, file_name="phishing_simulation.html", mime="text/html")
