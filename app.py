@@ -48,7 +48,7 @@ st.markdown("<h1>🛡️ PC & MOBILE CYBER SUITE PRO</h1>", unsafe_allow_html=Tr
 st.write("<p style='text-align: center; color: #888;'>Saf Siber Güvenlik & Penetrasyon Test Laboratuvarı</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# Sadeleştirilmiş ve Güçlendirilmiş Modül Listesi
+# Modül Listesi
 secim = st.sidebar.selectbox(
     "Siber Güvenlik Modülleri",
     [
@@ -337,32 +337,32 @@ elif secim == "💻 Sistem & Ağ Bilgisi":
     st.write(f"İşletim Sistemi: {platform.system()} {platform.release()}")
     st.write(f"Makine Adı: {socket.gethostname()}")
 
-# 16. Eğitim Amaçlı Oltalama Şablon Üreticisi (YENİ)
+# 16. Eğitim Amaçlı Oltalama Şablon Üreticisi (Canlı Önizlemeli)
 elif secim == "🎣 Eğitim Amaçlı Oltalama Şablon Üreticisi":
     st.subheader("🎣 Eğitim Amaçlı Oltalama (Phishing) Şablon Üreticisi")
-    st.info("Bu modül, siber güvenlik farkındalık eğitimleri ve oltalama simülasyonları için güvenli HTML giriş sayfası şablonları üretir.")
+    st.info("Bu modül, siber güvenlik farkındalık eğitimleri için güvenli HTML giriş sayfası şablonları üretir ve canlı önizleme sunar.")
     
     sim_turu = st.selectbox("Simülasyon Şablonu", ["Kurumsal E-Posta Giriş Sayfası", "Bulut Depolama Oturum Açma", "Şifre Sıfırlama Sayfası"])
     
-    if st.button("Eğitim Şablonu Üret"):
-        html_code = f"""<!DOCTYPE html>
+    html_code = f"""<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <title>{sim_turu} - Güvenlik Simülasyonu</title>
     <style>
-        body {{ background: #f4f4f4; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }}
-        .box {{ background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 350px; text-align: center; }}
-        .warning {{ background: #ff5500; color: white; padding: 10px; font-size: 12px; margin-bottom: 15px; border-radius: 4px; font-weight: bold; }}
-        input {{ width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }}
-        button {{ width: 100%; padding: 10px; background: #333; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }}
+        body {{ background: #121212; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }}
+        .box {{ background: #1e1e1e; color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(255,85,0,0.3); width: 320px; text-align: center; border: 1px solid #ff5500; }}
+        .warning {{ background: #ff5500; color: white; padding: 10px; font-size: 11px; margin-bottom: 15px; border-radius: 4px; font-weight: bold; }}
+        input {{ width: 100%; padding: 10px; margin: 10px 0; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px; box-sizing: border-box; }}
+        button {{ width: 100%; padding: 10px; background: #ff5500; color: #000; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }}
+        button:hover {{ background: #ff7722; }}
     </style>
 </head>
 <body>
     <div class="box">
         <div class="warning">🚨 EĞİTİM AMAÇLI SİMÜLASYON SAYFASIDIR.<br>Gerçek şifrenizi girmeyiniz!</div>
-        <h2>{sim_turu}</h2>
-        <form>
+        <h3>{sim_turu}</h3>
+        <form onsubmit="event.preventDefault(); alert('Simülasyon Başarılı! Bu bir eğitim testidir.');">
             <input type="text" placeholder="Kullanıcı Adı / E-Posta" required>
             <input type="password" placeholder="Şifre" required>
             <button type="submit">Giriş Yap</button>
@@ -370,6 +370,15 @@ elif secim == "🎣 Eğitim Amaçlı Oltalama Şablon Üreticisi":
     </div>
 </body>
 </html>"""
-        st.success("Eğitim şablonu başarıyla oluşturuldu!")
-        st.text_area("Üretilen HTML Kodu:", html_code, height=200)
-        st.download_button("Şablonu İndir (.html)", html_code, file_name="phishing_simulation.html", mime="text/html")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button("📥 Şablonu İndir (.html)", html_code, file_name="phishing_simulation.html", mime="text/html")
+    with col2:
+        goruntule = st.button("👁️ Canlı Önizlemeyi Aç / Yenile")
+
+    if goruntule or 'goster' in st.session_state:
+        st.session_state['goster'] = True
+        st.markdown("---")
+        st.subheader("🖥️ Sayfa Canlı Önizlemesi:")
+        st.components.v1.html(html_code, height=450, scrolling=True)
