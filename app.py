@@ -1,12 +1,9 @@
 import streamlit as st
 import socket
 import platform
-import subprocess
 import hashlib
-import base64
 import urllib.request
 import json
-import ssl
 import datetime
 import pandas as pd
 
@@ -51,85 +48,92 @@ st.markdown("<h1>🛡️ PC & MOBILE CYBER SUITE PRO</h1>", unsafe_allow_html=Tr
 st.write("<p style='text-align: center; color: #888;'>Saf Siber Güvenlik & Penetrasyon Test Laboratuvarı</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# Yan Menü - Saf Siber Güvenlik Modülleri
+# Yan Menü - Sadece Kritik Modüller
 secim = st.sidebar.selectbox(
     "Siber Güvenlik Modülleri",
     [
-        "⌨️ BadUSB / DuckyScript Stüdyosu",
-        "📍 IP Adresi Bulma & Detaylı Sorgulama",
-        "🔓 Hash Şifre Kırıcı (Gelişmiş Wordlist)",
-        "🔑 Hash Üretici & Analizcisi",
-        "🔒 JWT (JSON Web Token) Çözümleyici",
-        "🌐 SSL / TLS Sertifika Denetçisi",
-        "🛡️ HTTP Güvenlik Başlıkları (Security Headers)",
-        "🌐 Web & IP İstihbaratı (OSINT)",
-        "💉 Web Güvenliği Payload Kütüphanesi",
-        "📜 Mini Log Analiz Aracı",
-        "🚨 Olay Müdahale (Incident Response) Rehberi",
-        "🌐 HTTP İstek & API Test Aracı",
+        "🎯 Oltalama Mesajı & Gerçek IP Yakalama",
         "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi",
-        "💻 Sistem & Ağ Bilgisi",
-        "🎯 Oltalama Mesajı & Hedef Takip Sistemi"
+        "🔓 Hash Şifre Kırıcı (Wordlist)",
+        "🌐 IP & OSINT İstihbaratı",
+        "📜 Mini Log Analiz Aracı",
+        "💉 Web Güvenliği Payload Kütüphanesi",
+        "💻 Sistem & Ağ Bilgisi"
     ]
 )
 
-# 1. BadUSB / DuckyScript Stüdyosu
-if secim == "⌨️ BadUSB / DuckyScript Stüdyosu":
-    st.subheader("⌨️ BadUSB / DuckyScript Payload Stüdyosu")
-    st.markdown("Siber güvenlik testlerinde HID (Klavye) otomasyonu için DuckyScript komutları üretin.")
+# 1. OLTALAMA MESAJI & GERÇEK IP YAKALAMA
+if secim == "🎯 Oltalama Mesajı & Gerçek IP Yakalama":
+    st.subheader("🎯 Oltalama Mesajı & Gerçek IP Yakalama Paneli")
+    st.info("Hedefe atılacak tuzak mesajı hazırlayın. Hedef kişi bağlantıya tıkladığında gerçek IP ve tarayıcı bilgileri panele düşecektir.")
     
-    payload_tipi = st.selectbox("Payload Şablonu", ["Komut İstemi Aç", "PowerShell ile Bilgi Topla", "Ağ Durumunu Kaydet"])
-    if payload_tipi == "Komut İstemi Aç":
-        kod = "DELAY 1000\nGUI r\nDELAY 200\nSTRING cmd\nENTER\n"
-    elif payload_tipi == "PowerShell ile Bilgi Topla":
-        kod = "DELAY 1000\nGUI r\nDELAY 200\nSTRING powershell -NoP -NonI -W Hidden -Exec Bypass\nENTER\n"
-    else:
-        kod = "DELAY 1000\nGUI r\nDELAY 200\nSTRING ipconfig /all > C:\\net_info.txt && notepad C:\\net_info.txt\nENTER\n"
+    tab1, tab2 = st.tabs(["✉️ Tuzak Mesaj Oluştur", "📊 Yakalanan Gerçek Hedef Logları"])
+    
+    with tab1:
+        st.markdown("### 📨 Hedefe Atılacak Özelleştirilmiş Mesaj")
+        tuzak_url = st.text_input("Tıklatılacak Tuzak URL (Streamlit Uygulama Linkin):", "https://poyraz-ai.streamlit.app")
         
-    st.text_area("Üretilen DuckyScript Kodu:", kod, height=150)
-    st.download_button("Payload İndir (.txt)", kod, file_name="payload.txt")
+        hazir_mesaj = f"""Selam! Senin için çok ilginç bir şey buldum, kesinlikle göz atmalısın:\n\n👉 {tuzak_url}\n\nTıklayınca ne demek istediğimi anlıycaksın :D"""
+        
+        st.text_area("Hedefe Gönderilecek Metin:", hazir_mesaj, height=130)
+        st.download_button("Mesajı İndir (.txt)", hazir_mesaj, file_name="tuzak_mesaj.txt")
+        
+        st.markdown("---")
+        st.markdown("### 🌐 Gerçek Ziyaretçi Yakalama Testi")
+        st.write("Uygulamanı biri açtığında tarayıcı verilerini test etmek için aşağıdaki butona basabilirsin:")
+        
+        if st.button("Ziyaretçi Bilgilerimi (IP/Tarayıcı) Panele Kaydet"):
+            headers = st.context.headers
+            gercek_ip = headers.get("X-Forwarded-For", "Bilinmiyor (Yerel Ağ)").split(",")[0]
+            user_agent = headers.get("User-Agent", "Bilinmiyor")
+            
+            yeni_hedef = {
+                "Zaman": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "Gerçek IP": gercek_ip,
+                "Tarayıcı & Cihaz (User-Agent)": user_agent
+            }
+            if not st.session_state['target_logs'] or st.session_state['target_logs'][-1]["Gerçek IP"] != gercek_ip:
+                st.session_state['target_logs'].append(yeni_hedef)
+            st.success("🚨 BAŞARILI! Ziyaretçinin gerçek IP ve cihaz bilgileri panele işlendi!")
 
-# 2. IP Adresi Bulma & Detaylı Sorgulama
-elif secim == "📍 IP Adresi Bulma & Detaylı Sorgulama":
-    st.subheader("📍 IP Adresi Bulma ve Detaylı Konum/ISP Analizi")
-    st.info("Bu modül dış (public) IP adresinizi otomatik bulur ve istediğiniz IP'yi sorgulamanızı sağlar.")
-    
-    if st.button("Benim IP Adresimi Otomatik Bul"):
-        with st.spinner("IP adresiniz tespit ediliyor..."):
-            try:
-                req_ip = urllib.request.Request("https://api.ipify.org?format=json", headers={'User-Agent': 'Mozilla/5.0'})
-                with urllib.request.urlopen(req_ip, timeout=5) as resp:
-                    benim_ip = json.loads(resp.read().decode('utf-8')).get("ip")
-                    st.success(f"🌐 **Senin Dış (Public) IP Adresin:** `{benim_ip}`")
-            except Exception as e:
-                st.error(f"IP adresiniz alınamadı: {e}")
-                
-    st.markdown("---")
-    st.write("### 🔍 Harici IP Adresi Sorgulama")
-    hedef_ip = st.text_input("Sorgulanacak IP Adresi veya Domain:", "8.8.8.8")
-    
-    if st.button("IP / Hedef Bilgilerini Sorgula"):
-        with st.spinner("IP Veritabanı Taranıyor..."):
-            try:
-                url = f"http://ip-api.com/json/{hedef_ip.strip()}"
-                req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-                with urllib.request.urlopen(req, timeout=5) as response:
-                    veri = json.loads(response.read().decode('utf-8'))
-                    
-                    if veri.get("status") == "success":
-                        st.success(f"🎯 **Sorgulanan Hedef:** `{veri.get('query')}`")
-                        st.write(f"🌍 **Ülke:** {veri.get('country')} ({veri.get('countryCode')})")
-                        st.write(f"🏙️ **Şehir / Bölge:** {veri.get('city')} / {veri.get('regionName')}")
-                        st.write(f"🏢 **İnternet Servis Sağlayıcı (ISP):** {veri.get('isp')}")
-                        st.write(f"📡 **Organizasyon / AS:** {veri.get('org')} ({veri.get('as')})")
-                        st.write(f"📍 **Koordinatlar (Enlem/Boylam):** {veri.get('lat')}, {veri.get('lon')}")
+    with tab2:
+        st.markdown("### 📊 Yakalanan Gerçek Hedefler Bilgi Paneli")
+        if st.button("Tüm Logları Temizle"):
+            st.session_state['target_logs'] = []
+            st.rerun()
+            
+        if len(st.session_state['target_logs']) > 0:
+            df_targets = pd.DataFrame(st.session_state['target_logs'])
+            st.table(df_targets)
+        else:
+            st.info("Henüz tuzağa düşen kimse yok. 'Tuzak Mesaj Oluştur' sekmesinden test edebilirsin.")
+
+# 2. PORT TARAYICI
+elif secim == "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi":
+    st.subheader("🔌 Gelişmiş Port Tarayıcı & Risk Matrisi")
+    hedef_ip_port = st.text_input("Hedef IP / Domain", "127.0.0.1")
+    taranacak_portlar = st.text_input("Taranacak Portlar (Virgülle ayırın)", "21,22,25,80,443,3306,8080")
+    if st.button("Port Taraması Başlat"):
+        with st.spinner("Portlar taranıyor..."):
+            ports = [int(p.strip()) for p in taranacak_portlar.split(",") if p.strip().isdigit()]
+            results = []
+            for p in ports:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(1)
+                try:
+                    res = s.connect_ex((hedef_ip_port.strip(), p))
+                    if res == 0:
+                        results.append({"Port": p, "Durum": "AÇIK 🟢", "Risk": "Yüksek / Orta" if p in [21,22,3306] else "Düşük"})
                     else:
-                        st.error("❌ Geçersiz IP adresi veya sorgu başarısız oldu!")
-            except Exception as e:
-                st.error(f"Bağlantı Hatası: {e}")
+                        results.append({"Port": p, "Durum": "KAPALI 🔴", "Risk": "Yok"})
+                except:
+                    results.append({"Port": p, "Durum": "Hata ⚠️", "Risk": "Bilinmiyor"})
+                finally:
+                    s.close()
+            st.table(pd.DataFrame(results))
 
-# 3. Hash Şifre Kırıcı (Gelişmiş Wordlist)
-elif secim == "🔓 Hash Şifre Kırıcı (Gelişmiş Wordlist)":
+# 3. HASH ŞİFRE KIRICI
+elif secim == "🔓 Hash Şifre Kırıcı (Wordlist)":
     st.subheader("🔓 Gelişmiş Hash Kırıcı (Sözlük Saldırısı Simülasyonu)")
     algo = st.selectbox("Hash Algoritması Seçin", ["MD5", "SHA-1", "SHA-256"])
     ornek_hash = hashlib.md5("poyraz123".encode()).hexdigest()
@@ -155,110 +159,35 @@ elif secim == "🔓 Hash Şifre Kırıcı (Gelişmiş Wordlist)":
             if not bulundu:
                 st.error("❌ Eşleşme sağlanamadı.")
 
-# 4. Hash Üretici & Analizcisi
-elif secim == "🔑 Hash Üretici & Analizcisi":
-    st.subheader("🔑 Kriptografik Hash Üretim & Analiz Aracı")
-    duz_metin = st.text_input("Hash'lenecek Metin / Şifre:", "poyraz123")
-    if st.button("Hash Üret"):
-        st.write(f"📌 **MD5:** `{hashlib.md5(duz_metin.encode()).hexdigest()}`")
-        st.write(f"📌 **SHA-1:** `{hashlib.sha1(duz_metin.encode()).hexdigest()}`")
-        st.write(f"📌 **SHA-256:** `{hashlib.sha256(duz_metin.encode()).hexdigest()}`")
+# 4. IP & OSINT İSTİHBARATI
+elif secim == "🌐 IP & OSINT İstihbaratı":
+    st.subheader("🌐 IP Adresi ve Domain İstihbaratı")
+    hedef_ip = st.text_input("Sorgulanacak IP Adresi veya Domain:", "8.8.8.8")
     
-    st.markdown("---")
-    girilen_hash = st.text_input("Analiz Edilecek Hash Değeri:")
-    if st.button("Hash Türünü Analiz Et"):
-        uzunluk = len(girilen_hash.strip())
-        st.write(f"📏 **Karakter Uzunluğu:** `{uzunluk}`")
-        if uzunluk == 32:
-            st.success("🟢 Muhtemel Tür: **MD5** veya **NTLM**")
-        elif uzunluk == 40:
-            st.success("🟢 Muhtemel Tür: **SHA-1**")
-        elif uzunluk == 64:
-            st.success("🟢 Muhtemel Tür: **SHA-256**")
-        else:
-            st.warning("🟡 Standart formatlarla eşleşmedi.")
-
-# 5. JWT Çözümleyici
-elif secim == "🔒 JWT (JSON Web Token) Çözümleyici":
-    st.subheader("🔒 JWT Token İnceleme ve Çözümleme Aracı")
-    jwt_input = st.text_area("JWT Token Değerini Yapıştırın:", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlBveXJheiIsImFkbWluIjp0cnVlfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
-    if st.button("JWT Çözümle"):
-        try:
-            parcalar = jwt_input.split('.')
-            if len(parcalar) >= 2:
-                hp = parcalar[0] + '=' * (-len(parcalar[0]) % 4)
-                hd = base64.urlsafe_b64decode(hp).decode('utf-8')
-                pp = parcalar[1] + '=' * (-len(parcalar[1]) % 4)
-                pd = base64.urlsafe_b64decode(pp).decode('utf-8')
-                st.subheader("📋 Header:")
-                st.json(json.loads(hd))
-                st.subheader("📦 Payload:")
-                st.json(json.loads(pd))
-                st.success("Çözümlendi!")
-            else:
-                st.error("Hatalı JWT formatı.")
-        except Exception as e:
-            st.error(f"Hata: {e}")
-
-# 6. SSL / TLS Sertifika Denetçisi
-elif secim == "🌐 SSL / TLS Sertifika Denetçisi":
-    st.subheader("🌐 Web Sitesi SSL Sertifika Güvenlik Analizi")
-    site_adi = st.text_input("Hedef Alan Adı (Örn: github.com)", "github.com")
-    if st.button("Sertifikayı Sorgula"):
-        with st.spinner("İnceleniyor..."):
+    if st.button("Bilgileri Sorgula"):
+        with st.spinner("Veritabanı Taranıyor..."):
             try:
-                context = ssl.create_default_context()
-                with socket.create_connection((site_adi, 443), timeout=5) as sock:
-                    with context.wrap_socket(sock, server_hostname=site_adi) as ssock:
-                        cert = ssock.getpeercert()
-                        subject = dict(x[0] for x in cert.get('subject', []))
-                        issuer = dict(x[0] for x in cert.get('issuer', []))
-                        st.success(f"🔒 **Sertifika Sahibi (CN):** `{subject.get('commonName', 'Bilinmiyor')}`")
-                        st.info(f"🏛️ **Veren Otorite:** `{issuer.get('organizationName', 'Bilinmiyor')}`")
-            except Exception as e:
-                st.error(f"Hata: {e}")
-
-# 7. HTTP Güvenlik Başlıkları Denetçisi
-elif secim == "🛡️ HTTP Güvenlik Başlıkları (Security Headers)":
-    st.subheader("🛡️ Web Sitesi Güvenlik Başlıkları Denetçisi")
-    hedef_url = st.text_input("Test Edilecek URL", "https://github.com")
-    if st.button("Başlıkları Tara"):
-        with st.spinner("Taranıyor..."):
-            try:
-                req = urllib.request.Request(hedef_url, headers={'User-Agent': 'CyberSuite-Scanner'})
+                url = f"http://ip-api.com/json/{hedef_ip.strip()}"
+                req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
                 with urllib.request.urlopen(req, timeout=5) as response:
-                    headers = response.headers
-                    for b in ['Content-Security-Policy', 'Strict-Transport-Security', 'X-Frame-Options']:
-                        if b in headers:
-                            st.success(f"🟢 **{b}:** `{headers.get(b)}`")
-                        else:
-                            st.warning(f"🔴 **{b}:** Bulunamadı")
+                    veri = json.loads(response.read().decode('utf-8'))
+                    if veri.get("status") == "success":
+                        st.success(f"🎯 **Hedef:** `{veri.get('query')}`")
+                        st.write(f"🌍 **Ülke:** {veri.get('country')} ({veri.get('countryCode')})")
+                        st.write(f"🏙️ **Şehir:** {veri.get('city')} / {veri.get('regionName')}")
+                        st.write(f"🏢 **Servis Sağlayıcı (ISP):** {veri.get('isp')}")
+                    else:
+                        st.error("❌ Sorgu başarısız oldu!")
             except Exception as e:
                 st.error(f"Hata: {e}")
 
-# 8. Web & IP İstihbaratı (OSINT)
-elif secim == "🌐 Web & IP İstihbaratı (OSINT)":
-    st.subheader("🌐 Web Sitesi İstihbaratı")
-    hedef_site = st.text_input("Domain:", "google.com")
-    if st.button("İstihbarat Topla"):
-        try:
-            st.success(f"🎯 IP: `{socket.gethostbyname(hedef_site)}`")
-        except Exception as e:
-            st.error(f"Hata: {e}")
-
-# 9. Web Güvenliği Payload Kütüphanesi
-elif secim == "💉 Web Güvenliği Payload Kütüphanesi":
-    st.subheader("💉 Payload Kütüphanesi")
-    st.text_area("Örnekler:", "<script>alert('XSS')</script>\n' OR '1'='1", height=100)
-
-# 10. Mini Log Analiz Aracı
+# 5. MINI LOG ANALİZ ARACI
 elif secim == "📜 Mini Log Analiz Aracı":
     st.subheader("📜 Mini Web Log Analiz Aracı")
     sample_log = '192.168.1.10 - - [30/Oct/2026:12:00:00 +0300] "GET /index.html HTTP/1.1" 200 1024\n10.0.0.5 - - [30/Oct/2026:12:01:00 +0300] "GET /admin.php HTTP/1.1" 403 512'
     log_input = st.text_area("Log İçeriği:", sample_log, height=150)
     if st.button("Logları Analiz Et"):
         lines = [l.strip() for l in log_input.split("\n") if l.strip()]
-        st.write(f"📊 Toplam Log Satırı: **{len(lines)}**")
         parsed = []
         for line in lines:
             parts = line.split(" ")
@@ -271,106 +200,13 @@ elif secim == "📜 Mini Log Analiz Aracı":
             parsed.append({"IP Adresi": ip, "Durum Kodu": status, "Ham Satır": line})
         st.table(pd.DataFrame(parsed))
 
-# 11. Olay Müdahale Rehberi
-elif secim == "🚨 Olay Müdahale (Incident Response) Rehberi":
-    st.subheader("🚨 Olay Müdahale Adımları")
-    st.markdown("1. İzolasyon\n2. Delil Toplama\n3. Kök Neden\n4. İyileştirme")
+# 6. PAYLOAD KÜTÜPHANESİ
+elif secim == "💉 Web Güvenliği Payload Kütüphanesi":
+    st.subheader("💉 Payload Kütüphanesi")
+    st.text_area("Örnekler:", "<script>alert('XSS')</script>\n' OR '1'='1\n../../etc/passwd", height=100)
 
-# 12. HTTP İstek & API Test Aracı
-elif secim == "🌐 HTTP İstek & API Test Aracı":
-    st.subheader("🌐 HTTP İstek & API Test Aracı")
-    api_url = st.text_input("Test URL", "https://httpbin.org/get")
-    if st.button("İstek Gönder"):
-        with st.spinner("İstek yapılıyor..."):
-            try:
-                req = urllib.request.Request(api_url, headers={'User-Agent': 'CyberSuite-Tester'})
-                with urllib.request.urlopen(req, timeout=5) as resp:
-                    code = resp.getcode()
-                    headers = dict(resp.headers.items())
-                    body = resp.read().decode('utf-8', errors='ignore')
-                    st.success(f"HTTP Durum Kodu: `{code}`")
-                    st.subheader("📋 Yanıt Başlıkları:")
-                    st.json(headers)
-                    st.subheader("📦 Yanıt Gövdesi (Body):")
-                    st.code(body[:1000])
-            except Exception as e:
-                st.error(f"İstek başarısız: {e}")
-
-# 13. Port Tarayıcı & Risk Matrisi
-elif secim == "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi":
-    st.subheader("🔌 Gelişmiş Port Tarayıcı & Risk Matrisi")
-    hedef_ip_port = st.text_input("Hedef IP / Domain", "127.0.0.1")
-    taranacak_portlar = st.text_input("Taranacak Portlar (Virgülle ayırın)", "21,22,25,80,443,3306,8080")
-    if st.button("Port Taraması Başlat"):
-        with st.spinner("Portlar taranıyor..."):
-            ports = [int(p.strip()) for p in taranacak_portlar.split(",") if p.strip().isdigit()]
-            results = []
-            for p in ports:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.settimeout(1)
-                try:
-                    res = s.connect_ex((hedef_ip_port.strip(), p))
-                    if res == 0:
-                        results.append({"Port": p, "Durum": "AÇIK 🟢", "Risk": "Yüksek / Orta" if p in [21,22,3306] else "Düşük"})
-                    else:
-                        results.append({"Port": p, "Durum": "KAPALI 🔴", "Risk": "Yok"})
-                except:
-                    results.append({"Port": p, "Durum": "Hata ⚠️", "Risk": "Bilinmiyor"})
-                finally:
-                    s.close()
-            st.table(pd.DataFrame(results))
-
-# 14. Sistem & Ağ Bilgisi
+# 7. SİSTEM BİLGİSİ
 elif secim == "💻 Sistem & Ağ Bilgisi":
     st.subheader("💻 Sistem Bilgisi")
     st.write(f"İşletim Sistemi: {platform.system()} {platform.release()}")
     st.write(f"Makine Adı: {socket.gethostname()}")
-
-# 15. Oltalama Mesajı & Hedef Takip Sistemi (Gerçek IP Yakalama Destekli)
-elif secim == "🎯 Oltalama Mesajı & Hedef Takip Sistemi":
-    st.subheader("🎯 Oltalama Mesajı & Gerçek IP Yakalama Paneli")
-    st.info("Hedefe atılacak tuzak mesajı hazırlayın. Hedef kişi bağlantıya tıkladığında gerçek IP ve tarayıcı bilgileri otomatik panele düşecektir.")
-    
-    tab1, tab2 = st.tabs(["✉️ Tuzak Mesaj Oluştur", "📊 Gerçek Yakalanan Hedef Logları (Panel)"])
-    
-    with tab1:
-        st.markdown("### 📨 Hedefe Atılacak Özelleştirilmiş Mesaj")
-        konu_basligi = st.text_input("Mesaj Konusu / Bahane:", "Önemli Fotoğraf / Dosya Paylaşımı")
-        tuzak_url = st.text_input("Tıklatılacak Tuzak URL (Streamlit Uygulama Linkin):", "https://poyraz-ai.streamlit.app")
-        
-        hazir_mesaj = f"""Selam! Senin için çok ilginç bir şey buldum, kesinlikle göz atmalısın:\n\n👉 {tuzak_url}\n\nTıklayınca ne demek istediğimi anlıycaksın :D"""
-        
-        st.text_area("Hedefe Gönderilecek Metin:", hazir_mesaj, height=130)
-        st.download_button("Mesajı İndir (.txt)", hazir_mesaj, file_name="tuzak_mesaj.txt")
-        
-        st.markdown("---")
-        st.markdown("### 🌐 Gerçek Ziyaretçi Yakalama Otomasyonu")
-        st.write("Uygulamanı biri açtığında tarayıcı verilerini yakalamak için aşağıdaki butona basarak kendi ziyaretini test edebilirsin:")
-        
-        if st.button("Ziyaretçi Bilgilerimi (IP/Tarayıcı) Panele Kaydet"):
-            # Gerçek headers'tan IP ve User-Agent çekme
-            headers = st.context.headers
-            gercek_ip = headers.get("X-Forwarded-For", "Bilinmiyor (Yerel Ağ)").split(",")[0]
-            user_agent = headers.get("User-Agent", "Bilinmiyor")
-            
-            yeni_hedef = {
-                "Zaman": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "Gerçek IP": gercek_ip,
-                "Tarayıcı & Cihaz (User-Agent)": user_agent
-            }
-            # Çift kaydı önlemek için son eklenenle aynı değilse ekle
-            if not st.session_state['target_logs'] or st.session_state['target_logs'][-1]["Gerçek IP"] != gercek_ip:
-                st.session_state['target_logs'].append(yeni_hedef)
-            st.success("🚨 BAŞARILI! Ziyaretçinin gerçek IP ve cihaz bilgileri panele işlendi!")
-
-    with tab2:
-        st.markdown("### 📊 Yakalanan Gerçek Hedefler Bilgi Paneli")
-        if st.button("Tüm Logları Temizle"):
-            st.session_state['target_logs'] = []
-            st.rerun()
-            
-        if len(st.session_state['target_logs']) > 0:
-            df_targets = pd.DataFrame(st.session_state['target_logs'])
-            st.table(df_targets)
-        else:
-            st.info("Henüz tuzağa düşen kimse yok. 'Tuzak Mesaj Oluştur' sekmesinden test edebilirsin.")
