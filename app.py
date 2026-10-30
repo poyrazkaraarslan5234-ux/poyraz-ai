@@ -10,6 +10,7 @@ import json
 import math
 import ssl
 import pandas as pd
+from datetime import datetime
 
 # Sayfa Yapılandırması
 st.set_page_config(
@@ -44,6 +45,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Session State Log Listesi Başlatma
+if 'phishing_logs' not in st.session_state:
+    st.session_state['phishing_logs'] = []
+
 st.markdown("<h1>🛡️ PC & MOBILE CYBER SUITE PRO</h1>", unsafe_allow_html=True)
 st.write("<p style='text-align: center; color: #888;'>Saf Siber Güvenlik & Penetrasyon Test Laboratuvarı</p>", unsafe_allow_html=True)
 st.markdown("---")
@@ -67,7 +72,7 @@ secim = st.sidebar.selectbox(
         "🌐 HTTP İstek & API Test Aracı",
         "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi",
         "💻 Sistem & Ağ Bilgisi",
-        "🎣 Eğitim Amaçlı Oltalama Şablon Üreticisi"
+        "🎣 Eğitim Amaçlı Oltalama & Kurban Takip Paneli"
     ]
 )
 
@@ -118,7 +123,6 @@ elif secim == "📍 IP Adresi Bulma & Detaylı Sorgulama":
                         st.write(f"🌍 **Ülke:** {veri.get('country')} ({veri.get('countryCode')})")
                         st.write(f"🏙️ **Şehir / Bölge:** {veri.get('city')} / {veri.get('regionName')}")
                         st.write(f"🏢 **İnternet Servis Sağlayıcı (ISP):** {veri.get('isp')}")
-                        st.write(f"📡 **Organizasyon / AS:** {veri.get('org')} ({veri.get('as')})")
                     else:
                         st.error("❌ Geçersiz IP adresi veya sorgu başarısız oldu!")
             except Exception as e:
@@ -337,48 +341,62 @@ elif secim == "💻 Sistem & Ağ Bilgisi":
     st.write(f"İşletim Sistemi: {platform.system()} {platform.release()}")
     st.write(f"Makine Adı: {socket.gethostname()}")
 
-# 16. Eğitim Amaçlı Oltalama Şablon Üreticisi (Canlı Önizlemeli)
-elif secim == "🎣 Eğitim Amaçlı Oltalama Şablon Üreticisi":
-    st.subheader("🎣 Eğitim Amaçlı Oltalama (Phishing) Şablon Üreticisi")
-    st.info("Bu modül, siber güvenlik farkındalık eğitimleri için güvenli HTML giriş sayfası şablonları üretir ve canlı önizleme sunar.")
+# 16. Eğitim Amaçlı Oltalama & Kurban Takip Paneli (GÜNCELLENDİ)
+elif secim == "🎣 Eğitim Amaçlı Oltalama & Kurban Takip Paneli":
+    st.subheader("🎣 Eğitim Amaçlı Oltalama Mesajı & Kurban Takip Paneli")
+    st.info("Bu modül hem oltalama e-posta mesajı üretir hem de kurbanların form doldurduğunda düştüğü logları canlı gösterir.")
     
-    sim_turu = st.selectbox("Simülasyon Şablonu", ["Kurumsal E-Posta Giriş Sayfası", "Bulut Depolama Oturum Açma", "Şifre Sıfırlama Sayfası"])
+    tab1, tab2, tab3 = st.tabs(["📧 Oltalama Mesajı Üret", "👁️ Kurban Giriş Simülatörü", "📊 Yakalanan Loglar (Kurban Paneli)"])
     
-    html_code = f"""<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <title>{sim_turu} - Güvenlik Simülasyonu</title>
-    <style>
-        body {{ background: #121212; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }}
-        .box {{ background: #1e1e1e; color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(255,85,0,0.3); width: 320px; text-align: center; border: 1px solid #ff5500; }}
-        .warning {{ background: #ff5500; color: white; padding: 10px; font-size: 11px; margin-bottom: 15px; border-radius: 4px; font-weight: bold; }}
-        input {{ width: 100%; padding: 10px; margin: 10px 0; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px; box-sizing: border-box; }}
-        button {{ width: 100%; padding: 10px; background: #ff5500; color: #000; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }}
-        button:hover {{ background: #ff7722; }}
-    </style>
-</head>
-<body>
-    <div class="box">
-        <div class="warning">🚨 EĞİTİM AMAÇLI SİMÜLASYON SAYFASIDIR.<br>Gerçek şifrenizi girmeyiniz!</div>
-        <h3>{sim_turu}</h3>
-        <form onsubmit="event.preventDefault(); alert('Simülasyon Başarılı! Bu bir eğitim testidir.');">
-            <input type="text" placeholder="Kullanıcı Adı / E-Posta" required>
-            <input type="password" placeholder="Şifre" required>
-            <button type="submit">Giriş Yap</button>
-        </form>
-    </div>
-</body>
-</html>"""
+    with tab1:
+        st.markdown("### 📨 Örnek Eğitim E-Postası (Lure)")
+        hedef_servis = st.selectbox("Servis Türü", ["Kurumsal E-Posta Şifre Yenileme", "Bulut Depolama Uyarısı"])
+        fake_link = st.text_input("Simülasyon Bağlantı URL'si:", "https://guvenlik-kontrol-merkezi.com/login")
+        
+        mesaj_metni = f"""Konu: 🚨 ACİL: {hedef_servis} ve Doğrulama Gereklidir!
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.download_button("📥 Şablonu İndir (.html)", html_code, file_name="phishing_simulation.html", mime="text/html")
-    with col2:
-        goruntule = st.button("👁️ Canlı Önizlemeyi Aç / Yenile")
+Değerli Çalışanımız,
+Bilgi İşlem departmanı güvenlik politikaları gereği hesabınızın doğrulama süresi dolmuştur. 
+Lütfen 24 saat içinde aşağıdaki bağlantı üzerinden şifrenizi güncelleyiniz:
 
-    if goruntule or 'goster' in st.session_state:
-        st.session_state['goster'] = True
-        st.markdown("---")
-        st.subheader("🖥️ Sayfa Canlı Önizlemesi:")
-        st.components.v1.html(html_code, height=450, scrolling=True)
+🔗 {fake_link}
+
+Not: İşlem yapılmazsa hesabınız askıya alınacaktır."""
+
+        st.text_area("Oluşturulan Mesaj Taslağı:", mesaj_metni, height=180)
+        st.download_button("Mesajı İndir (.txt)", mesaj_metni, file_name="phishing_lure.txt")
+
+    with tab2:
+        st.markdown("### 🖥️ Kurban Simülasyon Ekranı (Test Alanı)")
+        st.warning("Aşağıdaki alan bir kurbanın tıkladığında göreceği sahte giriş ekranıdır. Bilgi girip 'Giriş Yap' derseniz log paneline düşecektir.")
+        
+        with st.form("kurban_formu"):
+            k_adi = st.text_input("Kullanıcı Adı / E-Posta")
+            sifre = st.text_input("Şifre", type="password")
+            gonder = st.form_submit_button("Giriş Yap / Şifreyi Güncelle")
+            
+            if gonder:
+                if k_adi and sifre:
+                    yeni_log = {
+                        "Zaman": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "IP / Konum": "192.168.1.35 (Yerel Simülasyon)",
+                        "Cihaz / Tarayıcı": platform.system() + " / Chrome",
+                        "Girilen Kullanıcı": k_adi,
+                        "Yakalanan Şifre": sifre
+                    }
+                    st.session_state['phishing_logs'].append(yeni_log)
+                    st.success("🚨 Kurban verileri başarıyla yakalandı ve log paneline işlendi!")
+                else:
+                    st.error("Lütfen alanları doldurun.")
+
+    with tab3:
+        st.markdown("### 📊 Canlı Kurban Yakalama ve Log Tablosu")
+        if st.button("Logları Temizle"):
+            st.session_state['phishing_logs'] = []
+            st.rerun()
+            
+        if len(st.session_state['phishing_logs']) > 0:
+            df_logs = pd.DataFrame(st.session_state['phishing_logs'])
+            st.table(df_logs)
+        else:
+            st.info("Henüz yakalanan bir kurban verisi yok. 'Kurban Giriş Simülatörü' sekmesinden test yapabilirsiniz.")
