@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import socket
 import platform
 import hashlib
@@ -60,32 +61,36 @@ secim = st.sidebar.selectbox(
     ]
 )
 
-# 1. IP ADRESİ BULMA & DETAYLI SORGULAMA (Gerçek ve Doğru IP Doğrulama)
+# 1. IP ADRESİ BULMA & DETAYLI SORGULAMA (Tarayıcı tabanlı JS ile %100 gerçek client IP bulma)
 if secim == "📍 IP Adresi Bulma & Detaylı Sorgulama":
     st.subheader("📍 IP Adresi Bulma ve Detaylı Konum/ISP Analizi")
-    st.info("Bu modül, dış ağdaki gerçek public IP adresinizi harici servisler üzerinden %100 doğru şekilde tespit eder.")
+    st.info("Bu modül, tarayıcınız üzerinden doğrudan gerçek dış public IP adresinizi %100 doğru şekilde tespit eder.")
     
-    if st.button("Gerçek IP Adresimi Doğru Şekilde Bul"):
-        with st.spinner("Gerçek IP adresiniz tespit ediliyor..."):
-            try:
-                # Harici güvenilir IP servisleri üzerinden gerçek dış IP'yi çekiyoruz
-                req_ip = urllib.request.Request("https://api.ipify.org?format=json", headers={'User-Agent': 'Mozilla/5.0'})
-                with urllib.request.urlopen(req_ip, timeout=5) as resp:
-                    veri_ip = json.loads(resp.read().decode('utf-8'))
-                    gercek_dis_ip = veri_ip.get("ip")
-                    st.success(f"🌐 **Gerçek Dış (Public) IP Adresin:** `{gercek_dis_ip}`")
-                    
-                    # Bulunan IP'nin detaylarını ip-api ile çekelim
-                    url_detay = f"http://ip-api.com/json/{gercek_dis_ip}"
-                    req_detay = urllib.request.Request(url_detay, headers={'User-Agent': 'Mozilla/5.0'})
-                    with urllib.request.urlopen(req_detay, timeout=5) as resp_detay:
-                        detay = json.loads(resp_detay.read().decode('utf-8'))
-                        if detay.get("status") == "success":
-                            st.write(f"🌍 **Ülke:** {detay.get('country')} ({detay.get('countryCode')})")
-                            st.write(f"🏙️ **Şehir / Bölge:** {detay.get('city')} / {detay.get('regionName')}")
-                            st.write(f"🏢 **İnternet Servis Sağlayıcı (ISP):** {detay.get('isp')}")
-            except Exception as e:
-                st.error(f"IP adresi alınamadı: {e}")
+    st.write("### 🌐 Senin Gerçek IP Adresin:")
+    # JavaScript ile tarayıcıdan gerçek IP'yi çekiyoruz
+    components.html("""
+        <div style="background-color: #1a1a1a; padding: 15px; border-radius: 6px; border: 1px solid #ff5500; color: #00ff00; font-family: 'Courier New', monospace;">
+            <div id="ip-display" style="font-size: 16px; font-weight: bold;">IP adresiniz taranıyor...</div>
+            <div id="isp-display" style="font-size: 14px; color: #aaa; margin-top: 5px;"></div>
+        </div>
+        <script>
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('ip-display').innerText = "🌐 IP Adresi: " + data.ip;
+                    return fetch('http://ip-api.com/json/' + data.ip);
+                })
+                .then(response => response.json())
+                .then(details => {
+                    if(details.status === 'success') {
+                        document.getElementById('isp-display').innerText = "🌍 Ülke: " + details.country + " | 🏙️ Şehir: " + details.city + " | 🏢 ISP: " + details.isp;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('ip-display').innerText = "IP adresi alınamadı.";
+                });
+        </script>
+    """, height=100)
                 
     st.markdown("---")
     st.write("### 🔍 Harici IP Adresi veya Domain Sorgulama")
