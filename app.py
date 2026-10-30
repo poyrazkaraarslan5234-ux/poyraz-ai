@@ -10,6 +10,7 @@ import json
 import math
 import ssl
 import datetime
+import pandas as pd
 
 # Sayfa Yapılandırması
 st.set_page_config(
@@ -97,11 +98,9 @@ elif secim == "📍 IP Adresi Bulma & Detaylı Sorgulama":
     st.subheader("📍 IP Adresi Bulma ve Detaylı Konum/ISP Analizi")
     st.info("Bu modül hem senin dış (public) IP adresini otomatik bulur hem de istediğin IP adresini sorgulamanı sağlar.")
     
-    # Kendi IP'sini otomatik bulma butonu
     if st.button("Benim IP Adresimi Otomatik Bul"):
         with st.spinner("IP adresiniz tespit ediliyor..."):
             try:
-                # Dış IP adresini öğrenmek için harici servis kullanıyoruz
                 req_ip = urllib.request.Request("https://api.ipify.org?format=json", headers={'User-Agent': 'Mozilla/5.0'})
                 with urllib.request.urlopen(req_ip, timeout=5) as resp:
                     benim_ip = json.loads(resp.read().decode('utf-8')).get("ip")
@@ -217,7 +216,7 @@ elif secim == "🌐 SSL / TLS Sertifika Denetçisi":
             try:
                 context = ssl.create_default_context()
                 with socket.create_connection((site_adi, 443), timeout=5) as sock:
-                    with context.wrap_sock(sock, server_hostname=site_adi) as ssock:
+                    with context.wrap_socket(sock, server_hostname=site_adi) as ssock:
                         cert = ssock.getpeercert()
                         subject = dict(x[0] for x in cert.get('subject', []))
                         issuer = dict(x[0] for x in cert.get('issuer', []))
@@ -288,10 +287,25 @@ elif secim == "💉 Web Güvenliği Payload Kütüphanesi":
     st.subheader("💉 Payload Kütüphanesi")
     st.text_area("Örnekler:", "<script>alert('XSS')</script>\n' OR '1'='1", height=100)
 
-# 15. Mini Log Analiz Aracı
+# 15. Mini Log Analiz Aracı (Güncellendi & Fonksiyonel)
 elif secim == "📜 Mini Log Analiz Aracı":
-    st.subheader("📜 Log Analiz")
-    log_input = st.text_area("Log:", '192.168.1.10 - "GET /" 200', height=100)
+    st.subheader("📜 Mini Web Log Analiz Aracı")
+    sample_log = '192.168.1.10 - - [30/Oct/2026:12:00:00 +0300] "GET /index.html HTTP/1.1" 200 1024\n10.0.0.5 - - [30/Oct/2026:12:01:00 +0300] "GET /admin.php HTTP/1.1" 403 512\n192.168.1.50 - - [30/Oct/2026:12:02:00 +0300] "GET /login.php HTTP/1.1" 200 2048'
+    log_input = st.text_area("Log İçeriği (Apache/Nginx Access Log Formatı):", sample_log, height=150)
+    if st.button("Logları Analiz Et"):
+        lines = [l.strip() for l in log_input.split("\n") if l.strip()]
+        st.write(f"📊 Toplam Log Satırı: **{len(lines)}**")
+        parsed = []
+        for line in lines:
+            parts = line.split(" ")
+            ip = parts[0] if len(parts) > 0 else "Bilinmiyor"
+            status = "-"
+            for p in parts:
+                if p.isdigit() and len(p) == 3:
+                    status = p
+                    break
+            parsed.append({"IP Adresi": ip, "Durum Kodu": status, "Ham Satır": line})
+        st.table(pd.DataFrame(parsed))
 
 # 16. Olay Müdahale Rehberi
 elif secim == "🚨 Olay Müdahale (Incident Response) Rehberi":
@@ -305,17 +319,49 @@ elif secim == "📝 Base64 & URL Encoder/Decoder":
     if st.button("Encode"):
         st.code(base64.b64encode(m.encode()).decode())
 
-# 18. HTTP İstek & API Test Aracı
+# 18. HTTP İstek & API Test Aracı (Güncellendi & Fonksiyonel)
 elif secim == "🌐 HTTP İstek & API Test Aracı":
-    st.subheader("🌐 API Test")
-    st.text_input("URL", "https://httpbin.org/get")
-    if st.button("İstek At"):
-        st.success("200 OK")
+    st.subheader("🌐 HTTP İstek & API Test Aracı")
+    api_url = st.text_input("Test URL", "https://httpbin.org/get")
+    if st.button("İstek Gönder"):
+        with st.spinner("İstek yapılıyor..."):
+            try:
+                req = urllib.request.Request(api_url, headers={'User-Agent': 'CyberSuite-Tester'})
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    code = resp.getcode()
+                    headers = dict(resp.headers.items())
+                    body = resp.read().decode('utf-8', errors='ignore')
+                    st.success(f"HTTP Durum Kodu: `{code}`")
+                    st.subheader("📋 Yanıt Başlıkları:")
+                    st.json(headers)
+                    st.subheader("📦 Yanıt Gövdesi (Body):")
+                    st.code(body[:1000])
+            except Exception as e:
+                st.error(f"İstek başarısız: {e}")
 
-# 19. Port Tarayıcı & Risk Matrisi
+# 19. Port Tarayıcı & Risk Matrisi (Güncellendi & Fonksiyonel)
 elif secim == "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi":
-    st.subheader("🔌 Port Tarayıcı")
-    st.write("🟢 Port 80: AÇIK\n🟢 Port 443: AÇIK")
+    st.subheader("🔌 Gelişmiş Port Tarayıcı & Risk Matrisi")
+    hedef_ip_port = st.text_input("Hedef IP / Domain", "127.0.0.1")
+    taranacak_portlar = st.text_input("Taranacak Portlar (Virgülle ayırın)", "21,22,25,80,443,3306,8080")
+    if st.button("Port Taraması Başlat"):
+        with st.spinner("Portlar taranıyor..."):
+            ports = [int(p.strip()) for p in taranacak_portlar.split(",") if p.strip().isdigit()]
+            results = []
+            for p in ports:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(1)
+                try:
+                    res = s.connect_ex((hedef_ip_port.strip(), p))
+                    if res == 0:
+                        results.append({"Port": p, "Durum": "AÇIK 🟢", "Risk": "Yüksek / Orta" if p in [21,22,3306] else "Düşük"})
+                    else:
+                        results.append({"Port": p, "Durum": "KAPALI 🔴", "Risk": "Yok"})
+                except:
+                    results.append({"Port": p, "Durum": "Hata ⚠️", "Risk": "Bilinmiyor"})
+                finally:
+                    s.close()
+            st.table(pd.DataFrame(results))
 
 # 20. Sistem & Ağ Bilgisi
 elif secim == "💻 Sistem & Ağ Bilgisi":
@@ -326,4 +372,3 @@ elif secim == "💻 Sistem & Ağ Bilgisi":
 elif secim == "🛡️ Oltalama (Phishing) Farkındalık Rehberi":
     st.subheader("🛡️ Oltalama Rehberi")
     st.markdown("Sahte domainlere dikkat edin.")
-
