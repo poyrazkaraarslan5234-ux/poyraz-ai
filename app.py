@@ -53,27 +53,50 @@ st.markdown("<h1>🛡️ PC & MOBILE CYBER SUITE PRO</h1>", unsafe_allow_html=Tr
 st.write("<p style='text-align: center; color: #888;'>Saf Siber Güvenlik & Penetrasyon Test Laboratuvarı</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# Sadeleştirilmiş Modül Listesi
+# Modül Listesi
 secim = st.sidebar.selectbox(
     "Siber Güvenlik Modülleri",
     [
+        "⌨️ BadUSB / DuckyScript Stüdyosu",
         "📍 IP Adresi Bulma & Detaylı Sorgulama",
         "🔓 Hash Şifre Kırıcı (Gelişmiş Wordlist)",
         "🔑 Hash Üretici & Analizcisi",
         "🔒 JWT (JSON Web Token) Çözümleyici",
         "🌐 SSL / TLS Sertifika Denetçisi",
+        "🛡️ HTTP Güvenlik Başlıkları (Security Headers)",
         "🔑 Güçlü Şifre Üretici & Entropi Ölçer",
         "⚡ Şifre Kırılma Süresi (Brute-Force)",
+        "🌐 Ağ Alt Ağ (Subnet) Hesaplayıcı",
         "📜 Mini Log Analiz Aracı",
+        "📝 Base64 & URL Encoder/Decoder",
+        "🌐 HTTP İstek & API Test Aracı",
         "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi",
         "💻 Sistem & Ağ Bilgisi",
         "🎣 Oltalama Mesajı & Kurban Yakalama Sistemi"
     ]
 )
 
-# 1. IP Adresi Bulma & Detaylı Sorgulama
-if secim == "📍 IP Adresi Bulma & Detaylı Sorgulama":
+# 1. BadUSB / DuckyScript Stüdyosu
+if secim == "⌨️ BadUSB / DuckyScript Stüdyosu":
+    st.subheader("⌨️ BadUSB / DuckyScript Payload Stüdyosu")
+    st.markdown("Siber güvenlik testlerinde HID (Klavye) otomasyonu için DuckyScript komutları üretin.")
+    
+    payload_tipi = st.selectbox("Payload Şablonu", ["Komut İstemi Aç", "PowerShell ile Bilgi Topla", "Ağ Durumunu Kaydet"])
+    if payload_tipi == "Komut İstemi Aç":
+        kod = "DELAY 1000\nGUI r\nDELAY 200\nSTRING cmd\nENTER\n"
+    elif payload_tipi == "PowerShell ile Bilgi Topla":
+        kod = "DELAY 1000\nGUI r\nDELAY 200\nSTRING powershell -NoP -NonI -W Hidden -Exec Bypass\nENTER\n"
+    else:
+        kod = "DELAY 1000\nGUI r\nDELAY 200\nSTRING ipconfig /all > C:\\net_info.txt && notepad C:\\net_info.txt\nENTER\n"
+        
+    st.text_area("Üretilen DuckyScript Kodu:", kod, height=150)
+    st.download_button("Payload İndir (.txt)", kod, file_name="payload.txt")
+
+# 2. IP Adresi Bulma & Detaylı Sorgulama
+elif secim == "📍 IP Adresi Bulma & Detaylı Sorgulama":
     st.subheader("📍 IP Adresi Bulma ve Detaylı Konum/ISP Analizi")
+    st.info("Bu modül dış (public) IP adresinizi otomatik bulur ve istediğiniz IP'yi sorgulamanızı sağlar.")
+    
     if st.button("Benim IP Adresimi Otomatik Bul"):
         with st.spinner("IP adresiniz tespit ediliyor..."):
             try:
@@ -85,7 +108,9 @@ if secim == "📍 IP Adresi Bulma & Detaylı Sorgulama":
                 st.error(f"IP adresiniz alınamadı: {e}")
                 
     st.markdown("---")
+    st.write("### 🔍 Harici IP Adresi Sorgulama")
     hedef_ip = st.text_input("Sorgulanacak IP Adresi veya Domain:", "8.8.8.8")
+    
     if st.button("IP / Hedef Bilgilerini Sorgula"):
         with st.spinner("IP Veritabanı Taranıyor..."):
             try:
@@ -96,22 +121,24 @@ if secim == "📍 IP Adresi Bulma & Detaylı Sorgulama":
                     if veri.get("status") == "success":
                         st.success(f"🎯 **Sorgulanan Hedef:** `{veri.get('query')}`")
                         st.write(f"🌍 **Ülke:** {veri.get('country')} ({veri.get('countryCode')})")
-                        st.write(f"🏙️ **Şehir:** {veri.get('city')}")
-                        st.write(f"🏢 **ISP:** {veri.get('isp')}")
+                        st.write(f"🏙️ **Şehir / Bölge:** {veri.get('city')} / {veri.get('regionName')}")
+                        st.write(f"🏢 **İnternet Servis Sağlayıcı (ISP):** {veri.get('isp')}")
                     else:
-                        st.error("❌ Geçersiz IP adresi!")
+                        st.error("❌ Geçersiz IP adresi veya sorgu başarısız oldu!")
             except Exception as e:
-                st.error(f"Hata: {e}")
+                st.error(f"Bağlantı Hatası: {e}")
 
-# 2. Hash Şifre Kırıcı
+# 3. Hash Şifre Kırıcı (Gelişmiş Wordlist)
 elif secim == "🔓 Hash Şifre Kırıcı (Gelişmiş Wordlist)":
-    st.subheader("🔓 Gelişmiş Hash Kırıcı (Sözlük Saldırısı)")
-    algo = st.selectbox("Algoritma", ["MD5", "SHA-1", "SHA-256"])
-    hedef_hash = st.text_input("Çözülecek Hash:", hashlib.md5("poyraz123".encode()).hexdigest())
-    wordlist_input = st.text_area("Wordlist:", "123456\npassword\nadmin\npoyraz\npoyraz123\n12345678", height=120)
+    st.subheader("🔓 Gelişmiş Hash Kırıcı (Sözlük Saldırısı Simülasyonu)")
+    algo = st.selectbox("Hash Algoritması Seçin", ["MD5", "SHA-1", "SHA-256"])
+    ornek_hash = hashlib.md5("poyraz123".encode()).hexdigest()
+    hedef_hash = st.text_input(f"Çözülecek {algo} Hash Değeri:", ornek_hash)
+    varsayilan_wordlist = "123456\npassword\nadmin\npoyraz\npoyraz123\n12345678\nqwerty\nturkey123"
+    wordlist_input = st.text_area("Test Edilecek Kelime Listesi (Wordlist):", varsayilan_wordlist, height=150)
     
-    if st.button("Hash'i Kır"):
-        with st.spinner("Taranıyor..."):
+    if st.button("Hash'i Kır (Saldırı Başlat)"):
+        with st.spinner("Sözlük taranıyor..."):
             wordlist = [w.strip() for w in wordlist_input.split("\n") if w.strip()]
             bulundu = False
             for kelime in wordlist:
@@ -122,128 +149,254 @@ elif secim == "🔓 Hash Şifre Kırıcı (Gelişmiş Wordlist)":
                 else:
                     dh = hashlib.sha256(kelime.encode()).hexdigest()
                 if dh == hedef_hash.strip().lower():
-                    st.success(f"🎉 **Şifre Bulundu:** `{kelime}`")
+                    st.success(f"🎉 **Şifre Bulundu!** Açık Hali: `{kelime}`")
                     bulundu = True
                     break
             if not bulundu:
                 st.error("❌ Eşleşme sağlanamadı.")
 
-# 3. Hash Üretici & Analizcisi
+# 4. Hash Üretici & Analizcisi
 elif secim == "🔑 Hash Üretici & Analizcisi":
-    st.subheader("🔑 Hash Üretici & Analiz Aracı")
-    duz_metin = st.text_input("Metin:", "poyraz123")
+    st.subheader("🔑 Kriptografik Hash Üretim & Analiz Aracı")
+    duz_metin = st.text_input("Hash'lenecek Metin / Şifre:", "poyraz123")
     if st.button("Hash Üret"):
         st.write(f"📌 **MD5:** `{hashlib.md5(duz_metin.encode()).hexdigest()}`")
+        st.write(f"📌 **SHA-1:** `{hashlib.sha1(duz_metin.encode()).hexdigest()}`")
         st.write(f"📌 **SHA-256:** `{hashlib.sha256(duz_metin.encode()).hexdigest()}`")
     
     st.markdown("---")
-    girilen_hash = st.text_input("Analiz Edilecek Hash:")
-    if st.button("Analiz Et"):
+    girilen_hash = st.text_input("Analiz Edilecek Hash Değeri:")
+    if st.button("Hash Türünü Analiz Et"):
         uzunluk = len(girilen_hash.strip())
-        st.write(f"📏 Uzunluk: `{uzunluk}`")
-        if uzunluk == 32: st.success("🟢 MD5/NTLM")
-        elif uzunluk == 40: st.success("🟢 SHA-1")
-        elif uzunluk == 64: st.success("🟢 SHA-256")
-        else: st.warning("🟡 Bilinmeyen format")
+        st.write(f"📏 **Karakter Uzunluğu:** `{uzunluk}`")
+        if uzunluk == 32:
+            st.success("🟢 Muhtemel Tür: **MD5** veya **NTLM**")
+        elif uzunluk == 40:
+            st.success("🟢 Muhtemel Tür: **SHA-1**")
+        elif uzunluk == 64:
+            st.success("🟢 Muhtemel Tür: **SHA-256**")
+        else:
+            st.warning("🟡 Standart formatlarla eşleşmedi.")
 
-# 4. JWT Çözümleyici
+# 5. JWT Çözümleyici
 elif secim == "🔒 JWT (JSON Web Token) Çözümleyici":
-    st.subheader("🔒 JWT Token Çözümleyici")
-    jwt_input = st.text_area("JWT Token:", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlBveXJheiIsImFkbWluIjp0cnVlfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
-    if st.button("Çözümle"):
+    st.subheader("🔒 JWT Token İnceleme ve Çözümleme Aracı")
+    jwt_input = st.text_area("JWT Token Değerini Yapıştırın:", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlBveXJheiIsImFkbWluIjp0cnVlfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
+    if st.button("JWT Çözümle"):
         try:
             parcalar = jwt_input.split('.')
-            hp = parcalar[0] + '=' * (-len(parcalar[0]) % 4)
-            pd = parcalar[1] + '=' * (-len(parcalar[1]) % 4)
-            st.json(json.loads(base64.urlsafe_b64decode(hp).decode('utf-8')))
-            st.json(json.loads(base64.urlsafe_b64decode(pd).decode('utf-8')))
-            st.success("Çözümlendi!")
+            if len(parcalar) >= 2:
+                hp = parcalar[0] + '=' * (-len(parcalar[0]) % 4)
+                hd = base64.urlsafe_b64decode(hp).decode('utf-8')
+                pp = parcalar[1] + '=' * (-len(parcalar[1]) % 4)
+                pd = base64.urlsafe_b64decode(pp).decode('utf-8')
+                st.subheader("📋 Header:")
+                st.json(json.loads(hd))
+                st.subheader("📦 Payload:")
+                st.json(json.loads(pd))
+                st.success("Çözümlendi!")
+            else:
+                st.error("Hatalı JWT formatı.")
         except Exception as e:
             st.error(f"Hata: {e}")
 
-# 5. SSL / TLS Sertifika Denetçisi
+# 6. SSL / TLS Sertifika Denetçisi
 elif secim == "🌐 SSL / TLS Sertifika Denetçisi":
-    st.subheader("🌐 SSL Sertifika Analizi")
-    site_adi = st.text_input("Domain:", "github.com")
-    if st.button("Sorgula"):
-        try:
-            context = ssl.create_default_context()
-            with socket.create_connection((site_adi, 443), timeout=5) as sock:
-                with context.wrap_socket(sock, server_hostname=site_adi) as ssock:
-                    cert = ssock.getpeercert()
-                    subject = dict(x[0] for x in cert.get('subject', []))
-                    st.success(f"🔒 **Sahip (CN):** `{subject.get('commonName', 'Bilinmiyor')}`")
-        except Exception as e:
-            st.error(f"Hata: {e}")
+    st.subheader("🌐 Web Sitesi SSL Sertifika Güvenlik Analizi")
+    site_adi = st.text_input("Hedef Alan Adı (Örn: github.com)", "github.com")
+    if st.button("Sertifikayı Sorgula"):
+        with st.spinner("İnceleniyor..."):
+            try:
+                context = ssl.create_default_context()
+                with socket.create_connection((site_adi, 443), timeout=5) as sock:
+                    with context.wrap_socket(sock, server_hostname=site_adi) as ssock:
+                        cert = ssock.getpeercert()
+                        subject = dict(x[0] for x in cert.get('subject', []))
+                        issuer = dict(x[0] for x in cert.get('issuer', []))
+                        st.success(f"🔒 **Sertifika Sahibi (CN):** `{subject.get('commonName', 'Bilinmiyor')}`")
+                        st.info(f"🏛️ **Veren Otorite:** `{issuer.get('organizationName', 'Bilinmiyor')}`")
+            except Exception as e:
+                st.error(f"Hata: {e}")
 
-# 6. Güçlü Şifre Üretici & Entropi Ölçer
+# 7. HTTP Güvenlik Başlıkları Denetçisi
+elif secim == "🛡️ HTTP Güvenlik Başlıkları (Security Headers)":
+    st.subheader("🛡️ Web Sitesi Güvenlik Başlıkları Denetçisi")
+    hedef_url = st.text_input("Test Edilecek URL", "https://github.com")
+    if st.button("Başlıkları Tara"):
+        with st.spinner("Taranıyor..."):
+            try:
+                req = urllib.request.Request(hedef_url, headers={'User-Agent': 'CyberSuite-Scanner'})
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    headers = response.headers
+                    for b in ['Content-Security-Policy', 'Strict-Transport-Security', 'X-Frame-Options']:
+                        if b in headers:
+                            st.success(f"🟢 **{b}:** `{headers.get(b)}`")
+                        else:
+                            st.warning(f"🔴 **{b}:** Bulunamadı")
+            except Exception as e:
+                st.error(f"Hata: {e}")
+
+# 8. Güçlü Şifre Üretici & Entropi Ölçer
 elif secim == "🔑 Güçlü Şifre Üretici & Entropi Ölçer":
-    st.subheader("🔑 Parola Üretici")
-    uzunluk = st.slider("Uzunluk", 8, 32, 16)
-    if st.button("Şifre Üret"):
-        sifre = "".join(random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*") for _ in range(uzunluk))
+    st.subheader("🔑 Parola Üretici & Entropi Analizi")
+    uzunluk = st.slider("Şifre Uzunluğu", 8, 32, 16)
+    if st.button("Güçlü Şifre Üret"):
+        sifre = "".join(random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+") for _ in range(uzunluk))
         st.code(sifre)
+    
+    st.markdown("---")
+    ent_sifre = st.text_input("Test Edilecek Şifre Entropisi:", type="password")
+    if ent_sifre:
+        entropi = len(ent_sifre) * math.log2(94)
+        st.write(f"📈 **Entropi Değeri:** `{entropi:.2f} bits`")
 
-# 7. Şifre Kırılma Süresi
+# 9. Şifre Kırılma Süresi (Brute-Force)
 elif secim == "⚡ Şifre Kırılma Süresi (Brute-Force)":
-    st.subheader("⚡ Brute-Force Süresi Simülatörü")
-    input_sifre = st.text_input("Şifre", "Poyraz123*", type="password")
+    st.subheader("⚡ Brute-Force Kırılma Süresi Simülatörü")
+    input_sifre = st.text_input("Test Şifresi", "Poyraz123*", type="password")
     if input_sifre:
         saniye = ((94) ** len(input_sifre)) / 10_000_000_000
-        st.write(f"🔢 Tahmini Süre: {saniye/31536000:,.1f} yıl" if saniye >= 60 else f"{saniye:.1f} saniye")
+        st.write(f"🔢 Tahmini Kırılma Süresi: {saniye/31536000:,.1f} yıl" if saniye >= 60 else f"{saniye:.1f} saniye")
 
-# 8. Mini Log Analiz Aracı
+# 10. Ağ Alt Ağ (Subnet) Hesaplayıcı
+elif secim == "🌐 Ağ Alt Ağ (Subnet) Hesaplayıcı":
+    st.subheader("🌐 Subnet Hesaplayıcı")
+    cidr = st.slider("CIDR Maskesi", 8, 30, 24)
+    st.write(f"Toplam IP Adresi Sayısı: `{2**(32-cidr):,}`")
+
+# 11. Mini Log Analiz Aracı
 elif secim == "📜 Mini Log Analiz Aracı":
-    st.subheader("📜 Mini Log Analiz")
-    log_input = st.text_area("Loglar:", '192.168.1.10 - - "GET /index.html" 200\n10.0.0.5 - - "GET /admin.php" 403', height=120)
-    if st.button("Analiz Et"):
+    st.subheader("📜 Mini Web Log Analiz Aracı")
+    sample_log = '192.168.1.10 - - [30/Oct/2026:12:00:00 +0300] "GET /index.html HTTP/1.1" 200 1024\n10.0.0.5 - - [30/Oct/2026:12:01:00 +0300] "GET /admin.php HTTP/1.1" 403 512'
+    log_input = st.text_area("Log İçeriği:", sample_log, height=150)
+    if st.button("Logları Analiz Et"):
         lines = [l.strip() for l in log_input.split("\n") if l.strip()]
-        parsed = [{"IP": l.split(" ")[0], "Ham": l} for l in lines]
+        st.write(f"📊 Toplam Log Satırı: **{len(lines)}**")
+        parsed = []
+        for line in lines:
+            parts = line.split(" ")
+            ip = parts[0] if len(parts) > 0 else "Bilinmiyor"
+            status = "-"
+            for p in parts:
+                if p.isdigit() and len(p) == 3:
+                    status = p
+                    break
+            parsed.append({"IP Adresi": ip, "Durum Kodu": status, "Ham Satır": line})
         st.table(pd.DataFrame(parsed))
 
-# 9. Port Tarayıcı
+# 12. Base64 & URL Encoder/Decoder
+elif secim == "📝 Base64 & URL Encoder/Decoder":
+    st.subheader("📝 Base64 Çevirici")
+    m = st.text_area("Metin:", "Poyraz")
+    if st.button("Base64 Encode Et"):
+        st.code(base64.b64encode(m.encode()).decode())
+
+# 13. HTTP İstek & API Test Aracı
+elif secim == "🌐 HTTP İstek & API Test Aracı":
+    st.subheader("🌐 HTTP İstek & API Test Aracı")
+    api_url = st.text_input("Test URL", "https://httpbin.org/get")
+    if st.button("İstek Gönder"):
+        with st.spinner("İstek yapılıyor..."):
+            try:
+                req = urllib.request.Request(api_url, headers={'User-Agent': 'CyberSuite-Tester'})
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    code = resp.getcode()
+                    headers = dict(resp.headers.items())
+                    body = resp.read().decode('utf-8', errors='ignore')
+                    st.success(f"HTTP Durum Kodu: `{code}`")
+                    st.subheader("📋 Yanıt Başlıkları:")
+                    st.json(headers)
+                    st.subheader("📦 Yanıt Gövdesi (Body):")
+                    st.code(body[:1000])
+            except Exception as e:
+                st.error(f"İstek başarısız: {e}")
+
+# 14. Port Tarayıcı & Risk Matrisi
 elif secim == "🔌 Gelişmiş Port Tarayıcı & Risk Matrisi":
-    st.subheader("🔌 Port Tarayıcı")
-    hedef_ip_port = st.text_input("Hedef IP", "127.0.0.1")
-    if st.button("Tara"):
-        with st.spinner("Taranıyor..."):
+    st.subheader("🔌 Gelişmiş Port Tarayıcı & Risk Matrisi")
+    hedef_ip_port = st.text_input("Hedef IP / Domain", "127.0.0.1")
+    taranacak_portlar = st.text_input("Taranacak Portlar (Virgülle ayırın)", "21,22,25,80,443,3306,8080")
+    if st.button("Port Taraması Başlat"):
+        with st.spinner("Portlar taranıyor..."):
+            ports = [int(p.strip()) for p in taranacak_portlar.split(",") if p.strip().isdigit()]
             results = []
-            for p in [21, 22, 80, 443, 3306]:
+            for p in ports:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.settimeout(0.5)
-                res = s.connect_ex((hedef_ip_port.strip(), p))
-                results.append({"Port": p, "Durum": "AÇIK 🟢" if res == 0 else "KAPALI 🔴"})
-                s.close()
+                s.settimeout(1)
+                try:
+                    res = s.connect_ex((hedef_ip_port.strip(), p))
+                    if res == 0:
+                        results.append({"Port": p, "Durum": "AÇIK 🟢", "Risk": "Yüksek / Orta" if p in [21,22,3306] else "Düşük"})
+                    else:
+                        results.append({"Port": p, "Durum": "KAPALI 🔴", "Risk": "Yok"})
+                except:
+                    results.append({"Port": p, "Durum": "Hata ⚠️", "Risk": "Bilinmiyor"})
+                finally:
+                    s.close()
             st.table(pd.DataFrame(results))
 
-# 10. Sistem & Ağ Bilgisi
+# 15. Sistem & Ağ Bilgisi
 elif secim == "💻 Sistem & Ağ Bilgisi":
     st.subheader("💻 Sistem Bilgisi")
     st.write(f"İşletim Sistemi: {platform.system()} {platform.release()}")
-    st.write(f"Makine: {socket.gethostname()}")
+    st.write(f"Makine Adı: {socket.gethostname()}")
 
-# 11. Oltalama Sistemi
+# 16. Oltalama Mesajı & Kurban Yakalama Sistemi (YENİ VE TAMAMLANMIŞ)
 elif secim == "🎣 Oltalama Mesajı & Kurban Yakalama Sistemi":
-    st.subheader("🎣 Oltalama & Kurban Yakalama Laboratuvarı")
-    tab1, tab2, tab3 = st.tabs(["✉️ Mesaj Oluştur", "🖥️ Kurban Simülasyonu", "📊 Log Paneli"])
+    st.subheader("🎣 Oltalama (Phishing) Mesajı & Kurban Takip Laboratuvarı")
+    st.info("Bu modül, hedefe gönderilecek mesajı (içindeki URL ile birlikte) hazırlar ve tıklayıp form dolduran kişilerin bilgilerini ekrana düşürür.")
+    
+    tab1, tab2, tab3 = st.tabs(["✉️ Mesaj ve URL Oluştur", "🖥️ Kurban Giriş Simülasyonu", "📊 Yakalanan Kurban Logları"])
     
     with tab1:
-        ozel_url = st.text_input("URL:", "https://guvenlik-merkezi.com/login")
-        mesaj = f"Konu: Şifre Güncelleme\n\nHesabınızın süresi doldu, tıklayın:\n🔗 {ozel_url}"
-        st.text_area("Mesaj:", mesaj, height=120)
-        st.download_button("İndir", mesaj, file_name="mesaj.txt")
+        st.markdown("### 📨 Oltalama Mesajı Taslağı")
+        servis_turu = st.selectbox("Simülasyon Senaryosu", ["Kurumsal E-Posta Doğrulama", "Bulut Depolama Şifre Güncelleme"])
+        ozel_url = st.text_input("Mesaj İçindeki Sahte URL:", "https://guvenlik-kontrol-merkezi.com/login")
         
+        mesaj_sablonu = f"""Konu: 🚨 ACİL: {servis_turu} ve Güvenlik Onayı Gereklidir!
+
+Değerli Çalışanımız,
+Bilgi İşlem departmanı güvenlik politikaları gereği hesabınızın doğrulama süresi dolmuştur. 
+Lütfen 24 saat içinde aşağıdaki bağlantı üzerinden şifrenizi güncelleyiniz:
+
+🔗 {ozel_url}
+
+Not: İşlem yapılmazsa sistem erişiminiz askıya alınacaktır."""
+
+        st.text_area("Hedef Kişiye Gönderilecek Mesaj:", mesaj_sablonu, height=180)
+        st.download_button("Mesajı İndir (.txt)", mesaj_sablonu, file_name="phishing_mesaj.txt")
+
     with tab2:
-        with st.form("form"):
-            k = st.text_input("Kullanıcı Adı")
-            s = st.text_input("Şifre", type="password")
-            if st.form_submit_button("Giriş Yap"):
-                st.session_state['phishing_logs'].append({"Zaman": datetime.now().strftime("%H:%M:%S"), "Kullanıcı": k, "Şifre": s})
-                st.success("🚨 Veri yakalandı!")
-                
+        st.markdown("### 🖥️ Kurbanın Gireceği Sahte Sayfa (Simülasyon)")
+        st.warning("Hedef kişi mesajdaki URL'ye tıkladığında bu sahte giriş ekranıyla karşılaşır. Bilgileri girip 'Giriş Yap' dediğinde sistem logları yakalar.")
+        
+        with st.form("kurban_giris_formu"):
+            k_adi = st.text_input("Kullanıcı Adı / E-Posta / Telefon")
+            sifre = st.text_input("Şifre", type="password")
+            form_gonder = st.form_submit_button("Giriş Yap / Şifreyi Güncelle")
+            
+            if form_gonder:
+                if k_adi and sifre:
+                    yeni_kurban = {
+                        "Zaman": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "IP / Konum": "192.168.1.55 (Simüle Edilen IP)",
+                        "Cihaz / Tarayıcı": platform.system() + " / Chrome Browser",
+                        "Girilen Kullanıcı": k_adi,
+                        "Yakalanan Şifre": sifre
+                    }
+                    st.session_state['phishing_logs'].append(yeni_kurban)
+                    st.success("🚨 BAŞARILI! Kurbanın girdiği şifre ve cihaz bilgileri yakalandı!")
+                else:
+                    st.error("Lütfen tüm alanları doldurun.")
+
     with tab3:
-        if st.button("Temizle"): st.session_state['phishing_logs'] = []; st.rerun()
-        if st.session_state['phishing_logs']:
-            st.table(pd.DataFrame(st.session_state['phishing_logs']))
+        st.markdown("### 📊 Canlı Kurban Log Paneli")
+        if st.button("Tüm Logları Temizle"):
+            st.session_state['phishing_logs'] = []
+            st.rerun()
+            
+        if len(st.session_state['phishing_logs']) > 0:
+            df_kurbanlar = pd.DataFrame(st.session_state['phishing_logs'])
+            st.table(df_kurbanlar)
         else:
-            st.info("Log yok.")
+            st.info("Henüz yakalanan kurban yok. 'Kurban Giriş Simülasyonu' sekmesinden test edebilirsin.")
