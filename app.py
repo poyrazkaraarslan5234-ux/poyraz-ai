@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import socket
 import platform
 import hashlib
@@ -61,36 +60,51 @@ secim = st.sidebar.selectbox(
     ]
 )
 
-# 1. IP ADRESİ BULMA & DETAYLI SORGULAMA (Tarayıcı tabanlı JS ile %100 gerçek client IP bulma)
+# 1. IP ADRESİ BULMA & DETAYLI SORGULAMA
 if secim == "📍 IP Adresi Bulma & Detaylı Sorgulama":
     st.subheader("📍 IP Adresi Bulma ve Detaylı Konum/ISP Analizi")
-    st.info("Bu modül, tarayıcınız üzerinden doğrudan gerçek dış public IP adresinizi %100 doğru şekilde tespit eder.")
+    st.info("Bu modül, dış ağdaki public IP adresinizi alternatif kararlı API'ler üzerinden hatasız olarak tespit eder.")
     
-    st.write("### 🌐 Senin Gerçek IP Adresin:")
-    # JavaScript ile tarayıcıdan gerçek IP'yi çekiyoruz
-    components.html("""
-        <div style="background-color: #1a1a1a; padding: 15px; border-radius: 6px; border: 1px solid #ff5500; color: #00ff00; font-family: 'Courier New', monospace;">
-            <div id="ip-display" style="font-size: 16px; font-weight: bold;">IP adresiniz taranıyor...</div>
-            <div id="isp-display" style="font-size: 14px; color: #aaa; margin-top: 5px;"></div>
-        </div>
-        <script>
-            fetch('https://api.ipify.org?format=json')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('ip-display').innerText = "🌐 IP Adresi: " + data.ip;
-                    return fetch('http://ip-api.com/json/' + data.ip);
-                })
-                .then(response => response.json())
-                .then(details => {
-                    if(details.status === 'success') {
-                        document.getElementById('isp-display').innerText = "🌍 Ülke: " + details.country + " | 🏙️ Şehir: " + details.city + " | 🏢 ISP: " + details.isp;
-                    }
-                })
-                .catch(error => {
-                    document.getElementById('ip-display').innerText = "IP adresi alınamadı.";
-                });
-        </script>
-    """, height=100)
+    if st.button("Gerçek IP Adresimi Göster"):
+        with st.spinner("IP adresiniz tespit ediliyor..."):
+            ip_bulundu = False
+            gercek_dis_ip = ""
+            
+            # Alternatif IP servisleri listesi (Biri takılırsa diğeri çalışır)
+            servisler = [
+                "https://ident.me",
+                "https://icanhazip.com",
+                "https://ifconfig.me/ip"
+            ]
+            
+            for servis in servisler:
+                try:
+                    req_ip = urllib.request.Request(servis, headers={'User-Agent': 'curl/7.68.0'})
+                    with urllib.request.urlopen(req_ip, timeout=4) as resp:
+                        gercek_dis_ip = resp.read().decode('utf-8').strip()
+                        if gercek_dis_ip:
+                            ip_bulundu = True
+                            break
+                except:
+                    continue
+            
+            if ip_bulundu and gercek_dis_ip:
+                st.success(f"🌐 **Gerçek Dış (Public) IP Adresin:** `{gercek_dis_ip}`")
+                
+                # IP detaylarını çekelim
+                try:
+                    url_detay = f"http://ip-api.com/json/{gercek_dis_ip}"
+                    req_detay = urllib.request.Request(url_detay, headers={'User-Agent': 'Mozilla/5.0'})
+                    with urllib.request.urlopen(req_detay, timeout=4) as resp_detay:
+                        detay = json.loads(resp_detay.read().decode('utf-8'))
+                        if detay.get("status") == "success":
+                            st.write(f"🌍 **Ülke:** {detay.get('country')} ({detay.get('countryCode')})")
+                            st.write(f"🏙️ **Şehir / Bölge:** {detay.get('city')} / {detay.get('regionName')}")
+                            st.write(f"🏢 **İnternet Servis Sağlayıcı (ISP):** {detay.get('isp')}")
+                except:
+                    st.warning("IP bulundu ancak detay servislerine ulaşılamadı.")
+            else:
+                st.error("❌ IP adresi alınamadı. Lütfen internet bağlantınızı kontrol edin.")
                 
     st.markdown("---")
     st.write("### 🔍 Harici IP Adresi veya Domain Sorgulama")
