@@ -10,8 +10,10 @@ from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
 
 CYAN, BG, WARN = "#aacfd1", "#05080d", "#ff9f43"
 
+
 def log(widget, msg):
     widget.appendPlainText(f"[{time.strftime('%H:%M:%S')}] {msg}")
+
 
 # ---------- Bağlantı izleyici ----------
 class ConnTab(QWidget):
@@ -27,7 +29,9 @@ class ConnTab(QWidget):
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         lay.addWidget(self.summary)
         lay.addWidget(self.table)
-        t = QTimer(self); t.timeout.connect(self.refresh); t.start(2000)
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.refresh)
+        self.timer.start(2000)
         self.refresh()
 
     def refresh(self):
@@ -56,7 +60,9 @@ class ConnTab(QWidget):
                     item.setForeground(QColor(WARN))
                 self.table.setItem(r, col, item)
         self.summary.setText(
-            f"Toplam bağlantı: {len(conns)}  |  Tüm arayüzlere açık dinleyen port: {exposed}")
+            f"Toplam bağlantı: {len(conns)}  |  "
+            f"Tüm arayüzlere açık dinleyen port: {exposed}")
+
 
 # ---------- Port tarayıcı (sadece özel ağ / loopback) ----------
 class Scanner(QThread):
@@ -65,60 +71,79 @@ class Scanner(QThread):
 
     def __init__(self, host, ports):
         super().__init__()
-        self.host, self.ports = host, ports
+        self.host = host
+        self.ports = ports
         self._stop = False
 
-    def stop(self): self._stop = True
+    def stop(self):
+        self._stop = True
 
     def run(self):
-        count = 0
+        results = []
+
         def probe(p):
-            nonlocal count
-            if self._stop: return
+            if self._stop:
+                return
             with socket.socket() as s:
                 s.settimeout(0.4)
                 if s.connect_ex((self.host, p)) == 0:
-                    try: name = socket.getservbyport(p)
-                    except OSError: name = "bilinmiyor"
-                    count += 1
+                    try:
+                        name = socket.getservbyport(p)
+                    except OSError:
+                        name = "bilinmiyor"
+                    results.append(p)
                     self.found.emit(p, name)
+
         with ThreadPoolExecutor(100) as ex:
             list(ex.map(probe, self.ports))
-        self.finished_scan.emit(count)
+        self.finished_scan.emit(len(results))
+
 
 class ScanTab(QWidget):
     def __init__(self, logbox):
         super().__init__()
-        self.logbox, self.worker = logbox, None
+        self.logbox = logbox
+        self.worker = None
         lay = QVBoxLayout(self)
         row = QHBoxLayout()
         self.host = QLineEdit("127.0.0.1")
-        self.start_p, self.end_p = QLineEdit("1"), QLineEdit("1024")
-        row.addWidget(QLabel("Hedef:")); row.addWidget(self.host)
-        row.addWidget(QLabel("Port:")); row.addWidget(self.start_p)
-        row.addWidget(QLabel("-")); row.addWidget(self.end_p)
+        self.start_p = QLineEdit("1")
+        self.end_p = QLineEdit("1024")
+        row.addWidget(QLabel("Hedef:"))
+        row.addWidget(self.host)
+        row.addWidget(QLabel("Port:"))
+        row.addWidget(self.start_p)
+        row.addWidget(QLabel("-"))
+        row.addWidget(self.end_p)
         self.auth = QCheckBox("Bu sistemi test etme yetkim var")
         self.btn = QPushButton("Taramayı Başlat")
         self.btn.clicked.connect(self.start)
         self.out = QPlainTextEdit(readOnly=True)
-        lay.addLayout(row); lay.addWidget(self.auth)
-        lay.addWidget(self.btn); lay.addWidget(self.out)
+        lay.addLayout(row)
+        lay.addWidget(self.auth)
+        lay.addWidget(self.btn)
+        lay.addWidget(self.out)
 
     def start(self):
         if not self.auth.isChecked():
-            self.out.appendPlainText("Önce yetki onayını işaretle."); return
+            self.out.appendPlainText("Önce yetki onayını işaretle.")
+            return
         try:
             ip = ipaddress.ip_address(socket.gethostbyname(self.host.text().strip()))
             a, b = int(self.start_p.text()), int(self.end_p.text())
             assert 1 <= a <= b <= 65535 and b - a <= 10000
         except Exception:
-            self.out.appendPlainText("Geçersiz hedef veya port aralığı (en fazla 10000 port)."); return
+            self.out.appendPlainText("Geçersiz hedef veya port aralığı (en fazla 10000 port).")
+            return
         if not (ip.is_private or ip.is_loopback):
-            self.out.appendPlainText("Bu araç sadece özel ağ/localhost adreslerini tarar."); return
-        self.out.clear(); self.btn.setEnabled(False)
+            self.out.appendPlainText("Bu araç sadece özel ağ/localhost adreslerini tarar.")
+            return
+        self.out.clear()
+        self.btn.setEnabled(False)
         log(self.logbox, f"Tarama: {ip} {a}-{b}")
         self.worker = Scanner(str(ip), range(a, b + 1))
-        self.worker.found.connect(lambda p, n: self.out.appendPlainText(f"AÇIK  {p}/tcp  ({n})"))
+        self.worker.found.connect(
+            lambda p, n: self.out.appendPlainText(f"AÇIK  {p}/tcp  ({n})"))
         self.worker.finished_scan.connect(self.done)
         self.worker.start()
 
@@ -126,6 +151,7 @@ class ScanTab(QWidget):
         self.out.appendPlainText(f"\nTarama bitti. Açık port: {n}")
         log(self.logbox, f"Tarama bitti, açık port: {n}")
         self.btn.setEnabled(True)
+
 
 # ---------- Dosya bütünlüğü ----------
 class HashTab(QWidget):
@@ -135,13 +161,17 @@ class HashTab(QWidget):
         lay = QVBoxLayout(self)
         self.btn = QPushButton("Dosya Seç ve SHA-256 Hesapla")
         self.btn.clicked.connect(self.pick)
-        self.expected = QLineEdit(); self.expected.setPlaceholderText("Beklenen hash (isteğe bağlı)")
+        self.expected = QLineEdit()
+        self.expected.setPlaceholderText("Beklenen hash (isteğe bağlı)")
         self.out = QPlainTextEdit(readOnly=True)
-        lay.addWidget(self.btn); lay.addWidget(self.expected); lay.addWidget(self.out)
+        lay.addWidget(self.btn)
+        lay.addWidget(self.expected)
+        lay.addWidget(self.out)
 
     def pick(self):
         path, _ = QFileDialog.getOpenFileName(self, "Dosya seç")
-        if not path: return
+        if not path:
+            return
         h = hashlib.sha256()
         with open(path, "rb") as f:
             for chunk in iter(lambda: f.read(1 << 20), b""):
@@ -150,9 +180,45 @@ class HashTab(QWidget):
         exp = self.expected.text().strip().lower()
         verdict = ""
         if exp:
-            verdict = "\nSONUÇ: EŞLEŞTİ ✔" if exp == digest else "\nSONUÇ: EŞLEŞMEDİ ✘ (dosya değişmiş olabilir)"
+            verdict = ("\nSONUÇ: EŞLEŞTİ ✔" if exp == digest
+                       else "\nSONUÇ: EŞLEŞMEDİ ✘ (dosya değişmiş olabilir)")
         self.out.setPlainText(f"{path}\nSHA-256: {digest}{verdict}")
         log(self.logbox, f"Hash hesaplandı: {path}")
 
+
 # ---------- Ana pencere ----------
 class Main(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("BLUE-DECK  |  Savunma ve Yetkili Test Paneli")
+        self.setStyleSheet(f"""
+            QWidget {{ background:{BG}; color:{CYAN}; font-family:Consolas,monospace; }}
+            QTabBar::tab {{ padding:8px 16px; border:1px solid {CYAN}; }}
+            QTabBar::tab:selected {{ background:#0e1a24; }}
+            QTableWidget, QPlainTextEdit, QLineEdit, QPushButton {{
+                border:1px solid {CYAN}; padding:4px; }}
+            QHeaderView::section {{ background:#0e1a24; border:1px solid {CYAN}; }}
+        """)
+        lay = QVBoxLayout(self)
+        self.logbox = QPlainTextEdit(readOnly=True)
+        tabs = QTabWidget()
+        tabs.addTab(ConnTab(self.logbox), "Bağlantılar")
+        tabs.addTab(ScanTab(self.logbox), "Port Tarayıcı")
+        tabs.addTab(HashTab(self.logbox), "Dosya Bütünlüğü")
+        tabs.addTab(self.logbox, "Günlük")
+        lay.addWidget(tabs)
+        log(self.logbox, "Panel başlatıldı.")
+
+    def keyPressEvent(self, e):
+        if e.key() == Qt.Key_F11:
+            self.showNormal() if self.isFullScreen() else self.showFullScreen()
+        elif e.key() == Qt.Key_Escape:
+            self.close()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    w = Main()
+    w.resize(1100, 650)
+    w.show()
+    sys.exit(app.exec())
